@@ -1,0 +1,65 @@
+version: "3.9"
+
+volumes:
+  db_data:
+
+services:
+  db:
+    image: postgres:12
+    container_name: project-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-app}
+      POSTGRES_USER: ${POSTGRES_USER:-app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-app}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - db_data:/var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+
+  adminer:
+    image: adminer
+    container_name: project-adminer
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      ADMINER_DESIGN: pepa-linha-dark
+    ports:
+      - "8080:8080"
+
+  backend:
+    build:
+      context: ../backend
+      args:
+        INSTALL_DEV: ${INSTALL_DEV:-true}
+    container_name: project-backend
+    restart: unless-stopped
+    depends_on:
+      - db
+    env_file:
+      - .env
+    environment:
+      POSTGRES_SERVER: db
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+      POSTGRES_DB: ${POSTGRES_DB:-app}
+      POSTGRES_USER: ${POSTGRES_USER:-app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-app}
+
+      ENVIRONMENT: ${ENVIRONMENT:-local}
+      DOMAIN: ${DOMAIN:-localhost}
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: ../frontend
+    container_name: project-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
+    ports:
+      - "3000:80"
