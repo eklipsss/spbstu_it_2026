@@ -1,6 +1,13 @@
-FROM nginx:1.27-alpine
+FROM node:20.14.0-alpine3.20 AS base
 
-RUN printf '<!doctype html><html><head><meta charset="utf-8"><title>Frontend</title></head><body><h1>Frontend placeholder</h1></body></html>' \
-  > /usr/share/nginx/html/index.html
+FROM base AS builder
+WORKDIR /app
+COPY package*.json /app
+RUN npm install
+COPY . ./
+RUN npm run build
 
+FROM nginx:1.27
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=builder /app/dist /usr/share/nginx/html
 EXPOSE 80

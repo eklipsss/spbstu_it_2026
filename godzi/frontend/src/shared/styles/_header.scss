@@ -1,0 +1,27 @@
+@use './vars' as *;
+@use "sass:math";
+@use "sass:color";
+
+.header {
+  background: $white;
+  padding: 1rem 0;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+
+  &__nav-list {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    list-style: none;
+  }
+
+  &__nav-item a {
+    text-decoration: none;
+    color: $text-color;
+    font-weight: 700;
+    transition: color $transition-duration;
+
+    &:hover {
+      color: $accent-color;
+    }
+  }
+}

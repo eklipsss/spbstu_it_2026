@@ -1,0 +1,13 @@
+@use './vars' as *;
+@use './header';
+@use './hero';
+@use './recommendations';
+@use './search';
+@use './categories';
+@use './contacts';
+@use './footer';
+@use './normalize';
+//@use './main_page.scss';
+@use './place_page.scss';
+@use 'swiper/css';
+@use './global.scss';

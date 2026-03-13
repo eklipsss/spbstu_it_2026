@@ -1,0 +1,6 @@
+FROM node:20.14.0-alpine3.20
+WORKDIR /app
+COPY server/db.json .
+RUN npm install json-server
+EXPOSE 3000
+CMD [ "npx", "json-server", "-w", "db.json", "--port=3000" ]

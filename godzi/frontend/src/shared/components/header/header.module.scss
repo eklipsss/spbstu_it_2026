@@ -1,0 +1,139 @@
+@use '@styles/vars' as *;
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  padding: 0.75rem 0 0;
+
+  &__inner {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 1rem;
+    min-height: 4.1rem;
+    padding: 0.65rem 1rem;
+    border-radius: 1.8rem;
+    background: rgba(29, 25, 36, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.05),
+      0 18px 42px rgba(21, 14, 30, 0.18);
+    backdrop-filter: blur(22px);
+  }
+
+  &__brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.15rem;
+    color: $white;
+    text-decoration: none;
+    font-size: 1.12rem;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+  }
+
+  &__brandMark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.5rem;
+    padding: 0 0.92rem;
+    border-radius: 999px;
+    background: linear-gradient(135deg, $accent-color, $primary-color);
+  }
+
+  &__brandText {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.5rem;
+    padding: 0;
+  }
+
+  &__nav {
+    justify-self: center;
+  }
+
+  &__navList {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 2.45rem;
+      padding: 0 0.95rem;
+      border-radius: 999px;
+      color: rgba(255, 255, 255, 0.78);
+      text-decoration: none;
+      font-weight: 600;
+      transition:
+        color $transition-duration ease,
+        background-color $transition-duration ease,
+        transform $transition-duration ease;
+
+      &:hover {
+        color: $white;
+        background: rgba(255, 255, 255, 0.08);
+        transform: translateY(-1px);
+      }
+    }
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__iconButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    color: $white;
+    text-decoration: none;
+    backdrop-filter: blur(16px);
+  }
+}
+
+@media (max-width: 860px) {
+  .header {
+    &__inner {
+      grid-template-columns: 1fr;
+      justify-items: center;
+      border-radius: 1.5rem;
+    }
+
+    &__navList {
+      flex-wrap: wrap;
+    }
+  }
+}
+
+@media (max-width: 560px) {
+  .header {
+    &__inner {
+      padding: 0.8rem;
+    }
+
+    &__navList {
+      width: 100%;
+
+      a {
+        width: 100%;
+      }
+    }
+  }
+}

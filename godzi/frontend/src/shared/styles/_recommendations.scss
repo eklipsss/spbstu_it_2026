@@ -1,0 +1,152 @@
+@use './vars' as *;
+
+.swiper {
+  overflow: visible !important;
+}
+
+.recommendations {
+  padding: 4rem 0;
+  background-color: $background-light;
+  text-align: center;
+
+  &__title {
+    font-size: 2.5rem;
+    margin-bottom: 2rem;
+    color: $text-color;
+    font-weight: bold;
+  }
+
+  /* Лента слайдера внутри контейнера */
+  &__swiper {
+    position: relative;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 0;
+    overflow: visible;
+
+    .swiper-wrapper {
+      display: flex;
+      align-items: stretch;
+    }
+
+    .swiper-slide {
+      position: relative;
+      height: 400px; // Фиксированная высота слайдов
+      background-size: cover; // Изображение заполняет слайд
+      background-position: center;
+      overflow: hidden;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      /* Убираем прямое затемнение через background-color */
+
+      /* Псевдоэлемент – изначальное затемнение, которое исчезает при наведении */
+      &::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6); // Изначальное затемнение
+        transition: background 0.3s ease, opacity 0.3s ease;
+        z-index: 1;
+      }
+
+      /* При наведении карточка поднимается, тень усиливается, затемнение исчезает */
+      &:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+      }
+
+      &:hover::before {
+        background: transparent; // Затемнение убирается
+        opacity: 0;
+      }
+    }
+  }
+
+  /* Элегантная пагинация под слайдером */
+  &__pagination {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    text-align: center;
+    margin-top: 1rem;
+  }
+
+  /* Пагинация становится видимой, когда пользователь наводит курсор на область слайдера */
+  .recommendations__swiper:hover + .recommendations__pagination {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  &__pagination-numbers {
+    list-style: none;
+    display: inline-flex;
+    gap: 0.5rem;
+    padding: 0;
+    margin: 0;
+
+    li {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background-color: rgba(0, 0, 0, 0.3);
+      cursor: pointer;
+      transition: background-color 0.3s;
+
+      &.active,
+      &:hover {
+        background-color: $primary-color;
+      }
+    }
+  }
+
+  /* Навигационные кнопки слайдера */
+  &__swiper-navigation {
+    position: absolute;
+    top: 50%;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    transform: translateY(-50%);
+    pointer-events: none;
+
+    .recommendations__swiper-prev,
+    .recommendations__swiper-next {
+      pointer-events: auto;
+      background: rgba(0, 0, 0, 0.5);
+      border: none;
+      color: $white;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background $transition-duration;
+
+      &:hover {
+        background: rgba(0, 0, 0, 0.7);
+      }
+    }
+  }
+
+  /* Стилизация ссылки внутри слайда */
+  .swiper-slide a {
+    position: relative;
+    z-index: 2; // Помещаем ссылку выше затемняющего псевдоэлемента
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+    text-decoration: none;
+    color: $white;
+  }
+
+  /* Стили для текста внутри слайда */
+  .swiper-slide p {
+    color: $white;
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin: 1rem;
+  }
+}

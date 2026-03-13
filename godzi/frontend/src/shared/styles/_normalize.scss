@@ -1,0 +1,328 @@
+/**
+  Нормализация блочной модели
+ */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+/**
+   Убираем внутренние отступы слева тегам списков,
+   у которых есть атрибут class
+  */
+:where(ul, ol):where([class]) {
+    padding-left: 0;
+}
+
+/**
+   Убираем внешние отступы body и двум другим тегам,
+   у которых есть атрибут class
+  */
+body,
+:where(blockquote, figure):where([class]) {
+    margin: 0;
+}
+
+/**
+   Убираем внешние отступы вертикали нужным тегам,
+   у которых есть атрибут class
+  */
+:where(h1, h2, h3, h4, h5, h6, p, ul, ol, dl):where([class]) {
+    margin-block: 0;
+}
+
+:where(dd[class]) {
+    margin-left: 0;
+}
+
+:where(fieldset[class]) {
+    margin-left: 0;
+    padding: 0;
+    border: none;
+}
+
+/**
+   Убираем стандартный маркер маркированному списку,
+   у которого есть атрибут class
+  */
+:where(ul[class]) {
+    list-style: none;
+}
+
+/**
+   Обнуляем вертикальные внешние отступы параграфа,
+   объявляем локальную переменную для внешнего отступа вниз,
+   чтобы избежать взаимодействие с более сложным селектором
+  */
+p {
+    --paragraphMarginBottom: 24px;
+
+    margin-block: 0;
+}
+
+/**
+   Внешний отступ вниз для параграфа без атрибута class,
+   который расположен не последним среди своих соседних элементов
+  */
+p:where(:not([class]):not(:last-child)) {
+    margin-bottom: var(--paragraphMarginBottom);
+}
+
+/**
+   Упрощаем работу с изображениями
+  */
+img {
+    display: block;
+    /*max-width: 100%;*/
+}
+
+/**
+   Наследуем свойства шрифт для полей ввода
+  */
+input,
+textarea,
+select,
+button {
+    font: inherit;
+}
+
+html {
+    /**
+       Пригодится в большинстве ситуаций
+       (когда, например, нужно будет "прижать" футер к низу сайта)
+      */
+    height: 100%;
+    /**
+       Плавный скролл
+      */
+    scroll-behavior: smooth;
+}
+
+body {
+    /**
+       Пригодится в большинстве ситуаций
+       (когда, например, нужно будет "прижать" футер к низу сайта)
+      */
+    min-height: 100%;
+    /**
+       Унифицированный интерлиньяж
+      */
+    line-height: 1.5;
+
+    overflow-x: hidden;
+}
+
+/**
+   Приводим к единому цвету svg-элементы
+  */
+svg *[fill] {
+    fill: currentColor;
+}
+
+svg *[stroke] {
+    stroke: currentColor;
+}
+
+/**
+   Чиним баг задержки смены цвета при взаимодействии с svg-элементами
+  */
+svg * {
+    transition-property: fill, stroke;
+}
+
+/**
+   Удаляем все анимации и переходы для людей,
+   которые предпочитают их не использовать
+  */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+:root {
+    --font-family: "Montserrat", sans-serif;
+
+    --container-width: 970px;
+    --container-padding-x: 15px;
+}
+
+a {
+    color: white;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+input:focus {
+    outline: none;
+    /* border: 2px solid #b0f22e; */
+}
+
+/* конец общих стилей */
+
+/* header */
+.header {
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.25);
+    background-color: #111;
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 22px 70px;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    gap: 40px 295px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 1280px) {
+    .header {
+        padding: 22px 25px;
+    }
+}
+
+@media (max-width: 1164px) {
+    .header {
+        padding: 20px 0;
+    }
+
+    .header-content {
+        gap: 40px 225px;
+    }
+}
+
+@media (max-width: 991px) {
+    .header {
+        max-width: 100%;
+        padding: 20px 0;
+    }
+
+    .header-content,
+    .nav-links {
+        flex-wrap: wrap;
+    }
+}
+
+.nav-links {
+    align-self: stretch;
+    display: flex;
+    min-width: 240px;
+    align-items: center;
+    gap: 40px 160px;
+    color: #fff;
+    letter-spacing: 0.96px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: auto 0;
+    font:
+        700 24px/1 Involve,
+        sans-serif;
+}
+
+/*@media (max-width: 991px) {*/
+/*    .nav-links {*/
+/*        max-width: 100%*/
+/*    }*/
+/*}*/
+@media (max-width: 1024px) {
+    .nav-links {
+        gap: 40px 30px;
+    }
+}
+
+.location {
+    text-decoration-line: underline;
+    align-self: stretch;
+    gap: 40px 303px;
+    white-space: nowrap;
+    margin: auto 0;
+}
+
+@media (max-width: 991px) {
+    .location {
+        white-space: initial;
+    }
+}
+
+.nav-sections {
+    align-self: stretch;
+    display: flex;
+    min-width: 240px;
+    align-items: start;
+    gap: 20px;
+    justify-content: start;
+    margin: auto 0;
+}
+
+@media (max-width: 991px) {
+    .nav-sections {
+        max-width: 100%;
+    }
+}
+
+.icon {
+    aspect-ratio: 1;
+    object-fit: contain;
+    object-position: center;
+    width: 24px;
+    fill: #ff0211;
+}
+
+.user-actions {
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    justify-content: start;
+    margin: auto 0;
+}
+
+@media (max-width: 854px) {
+    .user-actions {
+        margin-left: 600px;
+    }
+}
+
+@media (max-width: 640px) {
+    .user-actions {
+        margin-left: 350px;
+    }
+}
+
+.user-icon {
+    cursor: pointer;
+    aspect-ratio: 1.07;
+    object-fit: contain;
+    object-position: center;
+    width: 32px;
+    align-self: stretch;
+    margin: auto 0;
+}
+
+.menu-icon {
+    cursor: pointer;
+    aspect-ratio: 1;
+    object-fit: contain;
+    object-position: center;
+    width: 36px;
+    align-self: stretch;
+    margin: auto 0;
+}
+
+/* всё по <header> */
+
+/* оболочка для всего тела страницы */
+.main-container {
+    display: flex;
+    flex-direction: column;
+}

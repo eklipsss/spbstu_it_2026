@@ -1,0 +1,6 @@
+export * from './hero/hero'
+export * from './recommendations/recommendations'
+export * from './search/search'
+export * from './categories/categories'
+export * from './contacts/contacts'
+export * from './guides/guides'

@@ -1,0 +1,123 @@
+@use '@styles/vars' as *;
+
+.mainContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding-top: 1rem;
+}
+
+.heroSection {
+  padding-top: 0.5rem;
+}
+
+.heroCard {
+  padding: 2rem;
+  border-radius: 2rem;
+  background: linear-gradient(135deg, rgba(29, 25, 36, 0.98), rgba(63, 45, 83, 0.94));
+  color: $white;
+  box-shadow: $shadow-card;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2rem;
+  padding: 0 0.85rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.title {
+  max-width: 52rem;
+  margin: 1rem 0 0.8rem;
+  font-size: clamp(2.3rem, 4vw, 4.4rem);
+  line-height: 1;
+  letter-spacing: -0.05em;
+}
+
+.missionText {
+  max-width: 44rem;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 1.05rem;
+  line-height: 1.75;
+}
+
+.valuesSection {
+  padding-bottom: 0.5rem;
+}
+
+.valuesHeader {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+
+  h2,
+  p {
+    margin: 0;
+  }
+
+  h2 {
+    font-size: clamp(1.9rem, 3vw, 2.8rem);
+    letter-spacing: -0.04em;
+  }
+
+  p {
+    max-width: 26rem;
+    color: $text-muted;
+    line-height: 1.7;
+  }
+}
+
+.valuesGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.valueCard {
+  padding: 1.5rem;
+  border-radius: 1.6rem;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(31, 26, 36, 0.06);
+  box-shadow: $shadow-soft;
+
+  h3,
+  p {
+    margin: 0;
+  }
+
+  h3 {
+    margin-bottom: 0.7rem;
+    font-size: 1.2rem;
+  }
+
+  p {
+    color: $text-muted;
+    line-height: 1.7;
+  }
+}
+
+@media (max-width: 900px) {
+  .valuesHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .valuesGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .heroCard {
+    padding: 1.4rem;
+    border-radius: 1.5rem;
+  }
+}

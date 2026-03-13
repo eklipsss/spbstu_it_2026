@@ -1,0 +1,184 @@
+@use '@styles/vars' as *;
+
+.guide {
+  &_topbar {
+    margin-top: 1rem;
+  }
+
+  &_back {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.9rem;
+    padding: 0 1rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.78);
+    border: 1px solid rgba(31, 26, 36, 0.06);
+    box-shadow: $shadow-soft;
+    color: $text-color;
+    text-decoration: none;
+  }
+
+  &_container {
+    display: grid;
+    grid-template-columns: minmax(280px, 380px) minmax(0, 1fr);
+    gap: 1.25rem;
+    margin-top: 1rem;
+  }
+
+  &_left {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+
+    img {
+      width: 100%;
+      height: 28rem;
+      object-fit: cover;
+      border-radius: 2rem;
+      box-shadow: $shadow-soft;
+    }
+  }
+
+  &_purchaseCard {
+    padding: 1.25rem;
+    border-radius: 1.8rem;
+    background: rgba(255, 255, 255, 0.78);
+    border: 1px solid rgba(31, 26, 36, 0.06);
+    box-shadow: $shadow-soft;
+
+    p {
+      margin: 0.85rem 0 0;
+      color: $text-muted;
+      line-height: 1.6;
+      font-size: 0.92rem;
+    }
+  }
+
+  &_price {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+  }
+
+  &_buy {
+    width: 100%;
+    min-height: 3.3rem;
+    margin-top: 1rem;
+    border: 0;
+    border-radius: 1rem;
+    background: linear-gradient(135deg, $accent-color, #ff916f);
+    color: $white;
+    font-weight: 700;
+  }
+
+  &_info {
+    padding: 1.5rem;
+    border-radius: 2rem;
+    background: rgba(255, 255, 255, 0.78);
+    border: 1px solid rgba(31, 26, 36, 0.06);
+    box-shadow: $shadow-soft;
+
+    &_title {
+      margin-top: 0.9rem;
+      font-size: clamp(2rem, 3vw, 3.2rem);
+      font-weight: 800;
+      line-height: 1.03;
+      letter-spacing: -0.05em;
+    }
+
+    &_quoteWrapper {
+      margin-top: 1.25rem;
+      padding: 1.25rem;
+      border-radius: 1.5rem;
+      background: $background-light-secondary;
+      border: 1px solid rgba(124, 92, 255, 0.1);
+    }
+
+    &_quote {
+      margin: 0;
+      color: $text-color;
+      font-size: 1.12rem;
+      font-weight: 600;
+      line-height: 1.7;
+    }
+
+    &_author {
+      margin: 0.85rem 0 0;
+      color: $text-muted;
+      text-align: right;
+    }
+
+    &_text {
+      margin-top: 1.25rem;
+      color: $text-muted;
+      line-height: 1.8;
+
+      p {
+        margin: 0 0 1rem;
+      }
+    }
+
+    &_inside {
+      margin-top: 1.75rem;
+
+      &_title {
+        font-size: 1.35rem;
+        font-weight: 700;
+      }
+    }
+
+    &_list {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.85rem;
+      margin: 1rem 0 0;
+      padding: 0;
+      list-style: none;
+
+      &_item {
+        padding: 1rem;
+        border-radius: 1.4rem;
+        background: $background-light-secondary;
+        border: 1px solid rgba(31, 26, 36, 0.06);
+        color: $text-muted;
+        line-height: 1.5;
+
+        span {
+          display: block;
+          margin-bottom: 0.35rem;
+          color: $text-color;
+          font-size: 1.1rem;
+          font-weight: 700;
+        }
+      }
+    }
+  }
+
+  &_badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2rem;
+    padding: 0 0.85rem;
+    border-radius: 999px;
+    background: rgba(124, 92, 255, 0.1);
+    color: $primary-color;
+    font-size: 0.9rem;
+    font-weight: 700;
+  }
+}
+
+@media (max-width: 900px) {
+  .guide {
+    &_container {
+      grid-template-columns: 1fr;
+    }
+
+    &_left img {
+      height: 22rem;
+    }
+
+    &_info_list {
+      grid-template-columns: 1fr;
+    }
+  }
+}

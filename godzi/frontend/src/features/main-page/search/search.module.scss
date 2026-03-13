@@ -1,0 +1,117 @@
+@use '@styles/vars' as *;
+
+.search__section {
+  &__panel {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 520px);
+    gap: 1.5rem;
+    padding: 1.5rem;
+    border-radius: 2rem;
+    background: rgba(255, 255, 255, 0.76);
+    border: 1px solid rgba(31, 26, 36, 0.06);
+    box-shadow: $shadow-soft;
+  }
+
+  &__copy {
+    padding-right: 1rem;
+  }
+
+  &__eyebrow {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2rem;
+    padding: 0 0.85rem;
+    border-radius: 999px;
+    background: rgba(255, 122, 89, 0.12);
+    color: $accent-color;
+    font-size: 0.9rem;
+    font-weight: 700;
+  }
+
+  &__title {
+    margin: 0.9rem 0 0.8rem;
+    font-size: clamp(1.8rem, 3vw, 2.6rem);
+    line-height: 1.08;
+    letter-spacing: -0.04em;
+  }
+
+  &__description {
+    margin: 0;
+    color: $text-muted;
+    line-height: 1.7;
+  }
+}
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.75rem;
+  border-radius: 1.5rem;
+  background: $background-light-secondary;
+  border: 1px solid rgba(124, 92, 255, 0.12);
+  min-height: 5rem;
+
+  &__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    flex-shrink: 0;
+    border-radius: 1rem;
+    background: rgba(124, 92, 255, 0.1);
+    color: $primary-color;
+  }
+
+  &__input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    color: $text-color;
+    font-size: 1rem;
+    outline: none;
+
+    &::placeholder {
+      color: rgba(111, 103, 120, 0.74);
+    }
+  }
+
+  &__btn {
+    min-width: 7rem;
+    min-height: 3rem;
+    border: 0;
+    border-radius: 1rem;
+    background: linear-gradient(135deg, $primary-color, #9377ff);
+    color: $white;
+    font-weight: 700;
+    transition: transform $transition-duration ease;
+
+    &:hover {
+      transform: translateY(-1px);
+    }
+  }
+}
+
+@media (max-width: 900px) {
+  .search__section {
+    &__panel {
+      grid-template-columns: 1fr;
+    }
+
+    &__copy {
+      padding-right: 0;
+    }
+  }
+}
+
+@media (max-width: 640px) {
+  .search {
+    flex-wrap: wrap;
+
+    &__btn {
+      width: 100%;
+    }
+  }
+}
