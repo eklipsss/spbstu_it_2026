@@ -1,0 +1,214 @@
+@use '@styles/vars' as *;
+
+.editProfile {
+  display: grid;
+  gap: 1.6rem;
+  padding-top: 1.6rem;
+  padding-bottom: 2rem;
+
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    min-height: 4rem;
+    padding: 0 1.4rem;
+    border-radius: 999px;
+    background: rgba(29, 25, 36, 0.94);
+    color: $white;
+    box-shadow: 0 18px 42px rgba(21, 14, 30, 0.16);
+
+    span,
+    a {
+      font-weight: 700;
+    }
+
+    a {
+      color: rgba(255, 255, 255, 0.84);
+      text-decoration: none;
+    }
+  }
+
+  &__card {
+    padding: 2rem;
+    border-radius: 2rem;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.78), rgba(255, 250, 246, 0.58));
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    box-shadow: 0 30px 70px rgba(41, 29, 54, 0.12);
+    backdrop-filter: blur(24px);
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 4vw, 3rem);
+      line-height: 1.05;
+      letter-spacing: -0.04em;
+    }
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    margin-top: 1.8rem;
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.9rem;
+    margin-top: 1.6rem;
+  }
+}
+
+.preferences {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.6rem;
+
+  &__block {
+    padding: 1.2rem;
+    border-radius: 1.4rem;
+    background: rgba(255, 255, 255, 0.46);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+  }
+
+  &__title {
+    display: inline-flex;
+    margin-bottom: 0.9rem;
+    color: $text-muted;
+    font-size: 0.9rem;
+    font-weight: 700;
+  }
+
+  &__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+}
+
+.field {
+  display: grid;
+  gap: 0.35rem;
+
+  span {
+    font-size: 0.8rem;
+    color: $text-muted;
+  }
+
+  input,
+  textarea {
+    width: 100%;
+    padding: 0.9rem 1rem;
+    border-radius: 1rem;
+    border: 1px solid rgba(124, 92, 255, 0.2);
+    background: rgba(255, 255, 255, 0.92);
+    color: $text-color;
+    outline: none;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+
+    &:focus {
+      border-color: rgba(124, 92, 255, 0.5);
+      box-shadow: 0 0 0 4px rgba(124, 92, 255, 0.12);
+    }
+  }
+
+  textarea {
+    min-height: 8rem;
+    resize: vertical;
+  }
+
+  &_wide {
+    grid-column: 1 / -1;
+  }
+}
+
+.tagButton {
+  min-height: 2.35rem;
+  padding: 0.55rem 0.9rem;
+  border: 1px solid rgba(124, 92, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  color: $text-color;
+  font-weight: 700;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  transition:
+    transform $transition-duration ease,
+    background-color $transition-duration ease,
+    border-color $transition-duration ease,
+    box-shadow $transition-duration ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    border-color: rgba(124, 92, 255, 0.28);
+  }
+
+  &_active {
+    background: linear-gradient(135deg, rgba(255, 122, 89, 0.18), rgba(124, 92, 255, 0.18));
+    border-color: rgba(124, 92, 255, 0.58);
+    box-shadow:
+      0 0 0 3px rgba(124, 92, 255, 0.1),
+      0 10px 22px rgba(124, 92, 255, 0.12);
+    color: $primary-color;
+  }
+}
+
+.primaryButton,
+.secondaryButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 9.5rem;
+  min-height: 3rem;
+  padding: 0 1.2rem;
+  border-radius: 999px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.primaryButton {
+  border: 0;
+  background: linear-gradient(135deg, $accent-color, $primary-color);
+  color: $white;
+  box-shadow: 0 16px 30px rgba(124, 92, 255, 0.22);
+}
+
+.secondaryButton {
+  border: 1px solid rgba(124, 92, 255, 0.16);
+  background: rgba(255, 255, 255, 0.8);
+  color: $text-color;
+}
+
+@media (max-width: 700px) {
+  .editProfile {
+    &__head,
+    &__actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    &__head {
+      padding: 0.9rem 1rem;
+      border-radius: 1.5rem;
+      text-align: center;
+    }
+
+    &__card {
+      padding: 1.4rem 1rem;
+      border-radius: 1.6rem;
+    }
+
+    &__grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .field_wide {
+    grid-column: auto;
+  }
+
+  .primaryButton,
+  .secondaryButton {
+    width: 100%;
+  }
+}

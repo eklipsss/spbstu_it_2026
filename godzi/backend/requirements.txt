@@ -1,0 +1,7 @@
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+sqlmodel==0.0.22
+alembic==1.13.2
+email-validator==2.2.0
+psycopg[binary]==3.2.1
+requests==2.32.3

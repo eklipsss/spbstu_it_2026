@@ -3,6 +3,7 @@ import { useGetEntitiesQuery } from '@/entities/entity/api'
 import { useGetRecommendationsQuery } from '@/entities/recommendations/api'
 import { entitiesActions, entitiesSelectors } from '@/entities/entity/slice'
 import type { Entity } from '@/shared/types'
+import heroCharacter from '@assets/images/hero-character.png'
 import eventsImage from '@assets/images/main_events.png'
 import placesImage from '@assets/images/main_places.png'
 import { skipToken } from '@reduxjs/toolkit/query'
@@ -211,9 +212,9 @@ export const MainPage = () => {
             <div className={styles.hero__card}>
               <div className={styles.hero__copy}>
                 {/* <span className={styles.hero__kicker}>Ваш личный помощник в проведении досуга</span> */}
-                <h1 className={styles.hero__title}>Блок с приветственной информацией</h1>
+                <h1 className={styles.hero__title}>Найди свое<br />место в жизни!</h1>
                 <p className={styles.hero__description}>
-                  GOdzi помогает быстро выбрать, как провести время сегодня.
+                  А GOdzi тебе в этом поможет :)
                 </p>
 
                 {/* <div className={styles.hero__chips}>
@@ -223,16 +224,10 @@ export const MainPage = () => {
                 </div> */}
               </div>
 
-              {/* <div className={styles.hero__stats}>
-                <div>
-                  <strong>50+</strong>
-                  <span>точек и идей для города</span>
-                </div>
-                <div>
-                  <strong>1 выбор</strong>
-                  <span>до подходящего сценария на вечер</span>
-                </div>
-              </div> */}
+              <div className={styles.hero__visual} aria-hidden="true">
+                <div className={styles.hero__visualGlow} />
+                <img src={heroCharacter} alt="" className={styles.hero__image} />
+              </div>
             </div>
           </div>
         </section>
@@ -287,7 +282,7 @@ export const MainPage = () => {
           </div>
         </section>
 
-        <section className={styles.selections} id="collections">
+        <section className={styles.selections}>
           <div className="container">
             <div className={styles.resultsHead}>
               {/* <div>
@@ -322,7 +317,7 @@ export const MainPage = () => {
               )}
             </div>
 
-            <div className={`${styles.sectionHeading} ${styles.sectionHeading_spaced}`}>
+            <div className={`${styles.sectionHeading} ${styles.sectionHeading_spaced}`} id="collections">
               <span>Подборки</span>
               <h2>Самые интересные места и мероприятия, подобранные специально для вас</h2>
             </div>

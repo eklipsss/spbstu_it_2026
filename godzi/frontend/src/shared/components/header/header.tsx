@@ -1,6 +1,7 @@
-import { FC } from 'react'
+import { authEventName, isAuthenticated, signOut } from '@/shared/utils/session'
+import { FC, useEffect, useState } from 'react'
 import styles from './header.module.scss'
-import { Link } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 
 const actionIcons = {
   favorite: (
@@ -14,9 +15,38 @@ const actionIcons = {
       <path d="M4.5 20.25C4.5 17.3505 7.85786 15 12 15C16.1421 15 19.5 17.3505 19.5 20.25" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
     </svg>
   ),
+  logout: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M10.5 4.5H7.5C6.67157 4.5 6 5.17157 6 6V18C6 18.8284 6.67157 19.5 7.5 19.5H10.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M13.5 8.25L18 12L13.5 15.75" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M18 12H9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  ),
 }
 
 export const Header: FC = () => {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const [loggedIn, setLoggedIn] = useState(false)
+
+  useEffect(() => {
+    const syncAuth = () => setLoggedIn(isAuthenticated())
+
+    syncAuth()
+    window.addEventListener(authEventName, syncAuth)
+    window.addEventListener('storage', syncAuth)
+
+    return () => {
+      window.removeEventListener(authEventName, syncAuth)
+      window.removeEventListener('storage', syncAuth)
+    }
+  }, [location.pathname])
+
+  const handleLogout = () => {
+    signOut()
+    navigate('/login')
+  }
+
   return (
     <header className={styles.header}>
       <div className={`container ${styles.header__inner}`}>
@@ -46,9 +76,14 @@ export const Header: FC = () => {
           <button type="button" className={styles.header__iconButton} aria-label="Избранное">
             {actionIcons.favorite}
           </button>
-          <Link to="/profile" className={styles.header__iconButton} aria-label="Личный кабинет">
+          <Link to={loggedIn ? '/profile' : '/login'} className={styles.header__iconButton} aria-label="Личный кабинет">
             {actionIcons.profile}
           </Link>
+          {loggedIn ? (
+            <button type="button" className={styles.header__iconButton} aria-label="Выйти" onClick={handleLogout}>
+              {actionIcons.logout}
+            </button>
+          ) : null}
         </div>
       </div>
     </header>

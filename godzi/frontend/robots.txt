@@ -1,0 +1,4 @@
+User-agent: *
+Disallow:
+
+Sitemap: https://godzi.space/sitemap.xml
