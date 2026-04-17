@@ -7,7 +7,7 @@ from sqlmodel import Field, Relationship, SQLModel
 from app.models.timestamp import TimeStampModel
 
 if TYPE_CHECKING:
-    from app.models.relations import Like, UserEntity, Visit
+    from app.models.relations import Like, UserCategory, UserEntity, UserTag, Visit
     from app.models.role import Role
 
 
@@ -17,49 +17,61 @@ class UserBase(TimeStampModel):
     is_superuser: bool = False
     full_name: str | None = Field(default=None, max_length=255)
     phone_number: str | None = Field(default=None, max_length=20)
+    city: str | None = Field(default=None, max_length=255)
+    about: str | None = Field(default=None, max_length=1000)
 
     @field_validator("phone_number")
     @classmethod
     def phone_validation(cls, value: str | None):
-        regex = r"^(\+)[1-9][0-9\-\(\)\.]{9,15}$"
+        regex = r"^(\+)[1-9][0-9\-\(\)\.\s]{9,18}$"
         if value and not re.search(regex, value, re.I):
             raise ValueError("Phone Number Invalid.")
         return value
 
 
 class UserCreate(UserBase):
-    password: str = Field(min_length=8, max_length=40)
+    password: str = Field(min_length=4, max_length=40)
+    categories: list[str] = Field(default_factory=list)
+    tags: list[str] = Field(default_factory=list)
 
 
 class UserRegister(SQLModel):
     email: EmailStr = Field(max_length=255)
-    password: str = Field(min_length=8, max_length=40)
+    password: str = Field(min_length=4, max_length=40)
     full_name: str | None = Field(default=None, max_length=255)
 
 
 class UserUpdate(UserBase):
     email: EmailStr | None = Field(default=None, max_length=255)
-    password: str | None = Field(default=None, min_length=8, max_length=40)
+    password: str | None = Field(default=None, min_length=4, max_length=40)
     phone_number: str | None = Field(default=None, max_length=20)
+    city: str | None = Field(default=None, max_length=255)
+    about: str | None = Field(default=None, max_length=1000)
+    categories: list[str] | None = None
+    tags: list[str] | None = None
 
 
 class UserUpdateMe(SQLModel):
     full_name: str | None = Field(default=None, max_length=255)
     email: EmailStr | None = Field(default=None, max_length=255)
     phone_number: str | None = Field(default=None, max_length=20)
+    city: str | None = Field(default=None, max_length=255)
+    about: str | None = Field(default=None, max_length=1000)
+    categories: list[str] | None = None
+    tags: list[str] | None = None
 
     @field_validator("phone_number")
     @classmethod
     def phone_validation(cls, value: str | None):
-        regex = r"^(\+)[1-9][0-9\-\(\)\.]{9,15}$"
+        regex = r"^(\+)[1-9][0-9\-\(\)\.\s]{9,18}$"
         if value and not re.search(regex, value, re.I):
             raise ValueError("Phone Number Invalid.")
         return value
 
 
 class UpdatePassword(SQLModel):
-    current_password: str = Field(min_length=8, max_length=40)
-    new_password: str = Field(min_length=8, max_length=40)
+    current_password: str = Field(min_length=4, max_length=40)
+    new_password: str = Field(min_length=4, max_length=40)
 
 
 class User(UserBase, table=True):
@@ -69,12 +81,26 @@ class User(UserBase, table=True):
     role_id: Optional[int] = Field(default=None, foreign_key="role.role_id", nullable=True)
     role: Optional["Role"] = Relationship(back_populates="user")
     user_entities: list["UserEntity"] = Relationship(back_populates="user")
+    user_categories: list["UserCategory"] = Relationship(back_populates="user")
+    user_tags: list["UserTag"] = Relationship(back_populates="user")
     like: list["Like"] = Relationship(back_populates="user")
     visit: list["Visit"] = Relationship(back_populates="user")
 
 
 class UserPublic(UserBase):
     user_id: int
+    categories: list[str] = Field(default_factory=list)
+    tags: list[str] = Field(default_factory=list)
+
+    @classmethod
+    def from_model(cls, user: "User") -> "UserPublic":
+        categories = [item.category.name for item in user.user_categories if item.category is not None]
+        tags = [item.tag.name for item in user.user_tags if item.tag is not None]
+        return cls(
+            **user.model_dump(exclude={"hashed_password", "user_categories", "user_tags"}),
+            categories=categories,
+            tags=tags,
+        )
 
 
 class UsersPublic(SQLModel):
@@ -119,6 +145,7 @@ class Message(SQLModel):
 class Token(SQLModel):
     access_token: str
     token_type: str = "bearer"
+    user: UserPublic
 
 
 class TokenPayload(SQLModel):
@@ -127,4 +154,4 @@ class TokenPayload(SQLModel):
 
 class NewPassword(SQLModel):
     token: str
-    new_password: str = Field(min_length=8, max_length=40)
+    new_password: str = Field(min_length=4, max_length=40)

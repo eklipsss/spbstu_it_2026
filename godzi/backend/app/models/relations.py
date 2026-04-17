@@ -53,6 +53,36 @@ class UserEntity(TimeStampModel, table=True):
     relation_type: "RelationType" = Relationship(back_populates="user_entities")
 
 
+class UserCategoryCreate(SQLModel):
+    user_id: int = Field(foreign_key="user.user_id")
+    category_id: int = Field(foreign_key="category.category_id")
+
+
+class UserCategory(TimeStampModel, table=True):
+    __table_args__ = (UniqueConstraint("user_id", "category_id", name="pair_user_category"),)
+
+    user_category_id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="user.user_id")
+    category_id: int = Field(foreign_key="category.category_id")
+    user: "User" = Relationship(back_populates="user_categories")
+    category: "Category" = Relationship(back_populates="user_categories")
+
+
+class UserTagCreate(SQLModel):
+    user_id: int = Field(foreign_key="user.user_id")
+    tag_id: int = Field(foreign_key="tag.tag_id")
+
+
+class UserTag(TimeStampModel, table=True):
+    __table_args__ = (UniqueConstraint("user_id", "tag_id", name="pair_user_tag"),)
+
+    user_tag_id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="user.user_id")
+    tag_id: int = Field(foreign_key="tag.tag_id")
+    user: "User" = Relationship(back_populates="user_tags")
+    tag: "Tag" = Relationship(back_populates="user_tags")
+
+
 class EntityTagCreate(SQLModel):
     entity_id: int = Field(foreign_key="entity.entity_id")
     tag_id: int = Field(foreign_key="tag.tag_id")

@@ -1,31 +1,46 @@
-import { demoUser } from '@/shared/mocks/auth'
-import { demoProfile } from '@/shared/mocks/profile'
+import { useLoginMutation } from '@/entities/auth/api'
 import { Layout } from '@/shared/components'
-import { signIn } from '@/shared/utils/session'
+import { rtkApi } from '@/shared/api'
+import { buildStoredProfileFromUser, getStoredProfile, signIn } from '@/shared/utils/session'
 import { Helmet } from 'react-helmet-async'
 import { FormEvent, useMemo, useState } from 'react'
+import { useDispatch } from 'react-redux'
 import { Link, useNavigate } from 'react-router-dom'
 import styles from './login-page.module.scss'
 
 type LoginResult = 'success' | 'error' | null
 
 export const LoginPage = () => {
+  const dispatch = useDispatch()
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [result, setResult] = useState<LoginResult>(null)
+  const [login, { isLoading }] = useLoginMutation()
 
   const isFormValid = useMemo(() => Boolean(email.trim() && password), [email, password])
 
-  const handleSubmit = (event: FormEvent) => {
+  const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
     if (!isFormValid) return
 
-    const isSuccess = email.trim().toLowerCase() === demoUser.email && password === demoUser.password
-    if (isSuccess) {
-      signIn(demoProfile)
+    try {
+      const response = await login({
+        email: email.trim().toLowerCase(),
+        password,
+      }).unwrap()
+      const existingProfile = getStoredProfile()
+      const profile =
+        existingProfile.email.toLowerCase() === response.user.email.toLowerCase()
+          ? buildStoredProfileFromUser(response.user, existingProfile)
+          : buildStoredProfileFromUser(response.user)
+
+      signIn(response.access_token, profile)
+      dispatch(rtkApi.util.resetApiState())
+      setResult('success')
+    } catch {
+      setResult('error')
     }
-    setResult(isSuccess ? 'success' : 'error')
   }
 
   const handleCloseModal = () => {
@@ -75,8 +90,8 @@ export const LoginPage = () => {
                 </label>
               </div>
 
-              <button type="submit" className={styles.primaryButton} disabled={!isFormValid}>
-                Войти
+              <button type="submit" className={styles.primaryButton} disabled={!isFormValid || isLoading}>
+                {isLoading ? 'Входим...' : 'Войти'}
               </button>
 
               <div className={styles.formLinks}>

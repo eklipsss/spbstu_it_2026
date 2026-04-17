@@ -1,5 +1,7 @@
+import { rtkApi } from '@/shared/api'
 import { authEventName, isAuthenticated, signOut } from '@/shared/utils/session'
 import { FC, useEffect, useState } from 'react'
+import { useDispatch } from 'react-redux'
 import styles from './header.module.scss'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 
@@ -25,9 +27,10 @@ const actionIcons = {
 }
 
 export const Header: FC = () => {
+  const dispatch = useDispatch()
   const navigate = useNavigate()
   const location = useLocation()
-  const [loggedIn, setLoggedIn] = useState(false)
+  const [loggedIn, setLoggedIn] = useState(() => isAuthenticated())
 
   useEffect(() => {
     const syncAuth = () => setLoggedIn(isAuthenticated())
@@ -44,6 +47,7 @@ export const Header: FC = () => {
 
   const handleLogout = () => {
     signOut()
+    dispatch(rtkApi.util.resetApiState())
     navigate('/login')
   }
 
@@ -73,9 +77,11 @@ export const Header: FC = () => {
         </nav>
 
         <div className={styles.header__actions}>
-          <button type="button" className={styles.header__iconButton} aria-label="Избранное">
-            {actionIcons.favorite}
-          </button>
+          {loggedIn ? (
+            <Link to="/favorites" className={styles.header__iconButton} aria-label="Избранное">
+              {actionIcons.favorite}
+            </Link>
+          ) : null}
           <Link to={loggedIn ? '/profile' : '/login'} className={styles.header__iconButton} aria-label="Личный кабинет">
             {actionIcons.profile}
           </Link>

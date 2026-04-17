@@ -1,5 +1,6 @@
 import { AboutPage } from '@/pages/about-page'
 import { EditProfilePage } from '@/pages/edit-profile-page'
+import { FavoritesPage } from '@/pages/favorites-page'
 import { GuidePage } from '@/pages/guide-page'
 import { LoginPage } from '@/pages/login-page'
 import { MainPage } from '@/pages/main-page'
@@ -16,6 +17,7 @@ export const AppRouter = () => {
       <Route path='/about' element={<AboutPage />} />
       <Route path='/login' element={<LoginPage />} />
       <Route path='/register' element={<RegisterPage />} />
+      <Route path='/favorites' element={<FavoritesPage />} />
       <Route path='/profile/edit' element={<EditProfilePage />} />
       <Route path='/profile' element={<ProfilePage />} />
     </Routes>

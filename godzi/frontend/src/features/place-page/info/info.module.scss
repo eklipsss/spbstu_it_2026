@@ -1,8 +1,24 @@
 @use '@styles/vars' as *;
 
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.9rem;
+  margin-top: 1rem;
+  margin-bottom: 0.8rem;
+  padding: 0 1rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(31, 26, 36, 0.08);
+  color: $text-color;
+  text-decoration: none;
+  box-shadow: $shadow-soft;
+}
+
 .title__bar {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 1rem;
   margin-top: 1rem;
   padding: 1.4rem;
@@ -11,22 +27,13 @@
   color: $white;
   box-shadow: $shadow-card;
 
-  &__back {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    height: fit-content;
-    min-height: 2.9rem;
-    padding: 0 1rem;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.12);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    color: inherit;
-    text-decoration: none;
-  }
-
   &__body {
     min-width: 0;
+  }
+
+  &__favorite {
+    align-self: start;
+    justify-self: end;
   }
 
   &__eyebrow {

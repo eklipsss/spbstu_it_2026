@@ -1,8 +1,9 @@
-import { useGetChildGategoriesQuery } from '@/entities/categories/api'
+import { useGetChildCategoriesByIdQuery, useGetChildGategoriesQuery } from '@/entities/categories/api'
 import { useGetEntitiesQuery } from '@/entities/entity/api'
+import { useAddFavoriteMutation, useGetFavoriteIdsQuery, useRemoveFavoriteMutation } from '@/entities/favorites/api'
 import { useGetRecommendationsQuery } from '@/entities/recommendations/api'
 import { entitiesActions, entitiesSelectors } from '@/entities/entity/slice'
-import type { Entity } from '@/shared/types'
+import type { Category, Entity } from '@/shared/types'
 import heroCharacter from '@assets/images/hero-character.png'
 import eventsImage from '@assets/images/main_events.png'
 import placesImage from '@assets/images/main_places.png'
@@ -11,86 +12,10 @@ import { Helmet } from 'react-helmet-async'
 import { useEffect, useMemo, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { Link, useLocation } from 'react-router-dom'
-import { Layout } from '@/shared/components'
+import { AuthRequiredModal, FavoriteIconButton, Layout } from '@/shared/components'
+import { authEventName, isAuthenticated } from '@/shared/utils/session'
+import { resolveEntityPhoto } from '@/shared/utils'
 import styles from './main-page.module.scss'
-
-const fallbackChildCategories = {
-  'Места': [
-    { category_id: 1, name: 'Кофейни' },
-    { category_id: 2, name: 'Бары' },
-    { category_id: 3, name: 'Галереи' },
-    { category_id: 4, name: 'Маршруты' },
-  ],
-  'Мероприятия': [
-    { category_id: 5, name: 'Выставки' },
-    { category_id: 6, name: 'Маркеты' },
-    { category_id: 7, name: 'Лекции' },
-    { category_id: 8, name: 'Концерты' },
-  ],
-}
-
-const fallbackEntities: Entity[] = [
-  {
-    entity_id: 201,
-    name: 'Тихий бар с камерной атмосферой',
-    photo: placesImage,
-    address: 'Санкт-Петербург, наб. канала Грибоедова, 18',
-    age_gap: '18+',
-    average_cost: '1500 руб',
-    categories_ids: [],
-    contacts: '+7 (999) 000-00-00',
-    contributors: '',
-    cost: '1500 руб',
-    date: 'Ежедневно · 18:00–02:00',
-    description: 'Место для неспешного вечера и разговоров.',
-    links: 'https://example.com',
-    metro: 'Невский проспект',
-    source_link: 'Подготовлено как демо-карточка',
-    tags_ids: [],
-  },
-  {
-    entity_id: 202,
-    name: 'Городская выставка в старом особняке',
-    photo: placesImage,
-    address: 'Санкт-Петербург, Литейный проспект, 34',
-    age_gap: '12+',
-    average_cost: 'Бесплатно',
-    categories_ids: [],
-    contacts: '',
-    contributors: '',
-    cost: '0 руб',
-    date: 'Вт–Вс · 11:00–21:00',
-    description: 'Пространство для новых впечатлений и фото.',
-    links: '',
-    metro: 'Маяковская',
-    source_link: 'Подготовлено как демо-карточка',
-    tags_ids: [],
-  },
-  {
-    entity_id: 203,
-    name: 'Маршрут на полдня по красивым дворам',
-    photo: eventsImage,
-    address: 'Санкт-Петербург, старт у метро Чернышевская',
-    age_gap: '0+',
-    average_cost: 'Бесплатно',
-    categories_ids: [],
-    contacts: '',
-    contributors: '',
-    cost: '0 руб',
-    date: 'В любое время',
-    description: 'Подходит для прогулки вдвоём или соло.',
-    links: '',
-    metro: 'Чернышевская',
-    source_link: 'Подготовлено как демо-карточка',
-    tags_ids: [],
-  },
-]
-
-const fallbackRecommendations = [
-  { entity_id: 101, name: 'Неспешный вечер в атмосферном баре', photo: placesImage },
-  { entity_id: 102, name: 'Маршрут по фотогеничным городским локациям', photo: placesImage },
-  { entity_id: 103, name: 'Выходной с выставкой и ужином', photo: eventsImage },
-]
 
 const contactLinks = [
   {
@@ -113,16 +38,53 @@ const contactLinks = [
   },
 ]
 
+const ROOT_CATEGORY_IDS: Record<string, number> = {
+  Места: 1,
+  Мероприятия: 2,
+}
+
 export const MainPage = () => {
   const location = useLocation()
   const dispatch = useDispatch()
   const searchedEntities = useSelector(entitiesSelectors.searchedEntities)
+  const [loggedIn, setLoggedIn] = useState(() => isAuthenticated())
   const [selectedMainCategory, setSelectedMainCategory] = useState<string>('Места')
-  const [selectedChildCategory, setSelectedChildCategory] = useState<number>()
+  const [selectedCategoryPath, setSelectedCategoryPath] = useState<Category[]>([])
+  const [resultsPage, setResultsPage] = useState(0)
+  const [authPromptOpen, setAuthPromptOpen] = useState(false)
+  const [pendingFavoriteIds, setPendingFavoriteIds] = useState<number[]>([])
 
-  const { data: mainCategoryChilds, isLoading: isMainCategoryLoading } = useGetChildGategoriesQuery(selectedMainCategory ?? skipToken)
-  const { data: entities } = useGetEntitiesQuery(selectedChildCategory ?? skipToken)
-  const { data: recommendations } = useGetRecommendationsQuery({ skip: 0, limit: 5 })
+  const selectedChildCategory = selectedCategoryPath[selectedCategoryPath.length - 1]
+  const selectedChildCategoryId = selectedChildCategory?.category_id
+
+  const {
+    currentData: mainCategoryChilds,
+    isFetching: isMainCategoryLoading,
+  } = useGetChildGategoriesQuery(selectedMainCategory ?? skipToken)
+  const {
+    currentData: nestedChildCategories,
+    isFetching: isNestedCategoriesLoading,
+  } = useGetChildCategoriesByIdQuery(
+    selectedChildCategoryId ?? skipToken,
+  )
+  const { data: entities } = useGetEntitiesQuery(selectedChildCategoryId ?? skipToken)
+  const { data: recommendations } = useGetRecommendationsQuery({ skip: 0, limit: 10 })
+  const { data: favoriteIds = [] } = useGetFavoriteIdsQuery(undefined, { skip: !loggedIn })
+  const [addFavorite] = useAddFavoriteMutation()
+  const [removeFavorite] = useRemoveFavoriteMutation()
+
+  useEffect(() => {
+    const syncAuth = () => setLoggedIn(isAuthenticated())
+
+    syncAuth()
+    window.addEventListener(authEventName, syncAuth)
+    window.addEventListener('storage', syncAuth)
+
+    return () => {
+      window.removeEventListener(authEventName, syncAuth)
+      window.removeEventListener('storage', syncAuth)
+    }
+  }, [])
 
   useEffect(() => {
     const params = new URLSearchParams(location.search)
@@ -130,13 +92,13 @@ export const MainPage = () => {
 
     if (type === 'places') {
       setSelectedMainCategory('Места')
-      setSelectedChildCategory(undefined)
+      setSelectedCategoryPath([])
       dispatch(entitiesActions.resetEntities())
     }
 
     if (type === 'events') {
       setSelectedMainCategory('Мероприятия')
-      setSelectedChildCategory(undefined)
+      setSelectedCategoryPath([])
       dispatch(entitiesActions.resetEntities())
     }
 
@@ -151,22 +113,38 @@ export const MainPage = () => {
   }, [dispatch, location.hash, location.search])
 
   const childCategories = useMemo(() => {
-    if (mainCategoryChilds?.categories?.length) {
-      return mainCategoryChilds.categories
+    if (selectedCategoryPath.length) {
+      return nestedChildCategories?.categories ?? []
     }
 
-    return fallbackChildCategories[selectedMainCategory as keyof typeof fallbackChildCategories] ?? []
-  }, [mainCategoryChilds?.categories, selectedMainCategory])
+    return mainCategoryChilds?.categories ?? []
+  }, [mainCategoryChilds?.categories, nestedChildCategories?.categories, selectedCategoryPath.length])
+
+  const shouldRenderBranch = selectedChildCategoryId
+    ? isNestedCategoriesLoading || childCategories.length > 0
+    : isMainCategoryLoading || childCategories.length > 0
+  const branchOnNextLine = selectedCategoryPath.length >= 1
+
+  const breadcrumbCategories = useMemo<Category[]>(
+    () => [
+      {
+        category_id: ROOT_CATEGORY_IDS[selectedMainCategory],
+        name: selectedMainCategory,
+        parent_id: null,
+      },
+      ...selectedCategoryPath,
+    ],
+    [selectedMainCategory, selectedCategoryPath],
+  )
 
   const selectionCards = useMemo(() => {
-    const source = recommendations?.length ? recommendations : fallbackRecommendations
-    const normalized = [...source]
-
-    while (normalized.length < 5) {
-      normalized.push(...source)
+    if (!recommendations?.length) {
+      return []
     }
 
-    return normalized.slice(0, 5)
+    return [...recommendations]
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 5)
   }, [recommendations])
 
   const visibleEntities = useMemo(() => {
@@ -174,27 +152,120 @@ export const MainPage = () => {
       return searchedEntities.entities
     }
 
-    if (entities?.entities?.length && selectedChildCategory) {
+    if (entities?.entities?.length && selectedChildCategoryId) {
       return entities.entities
     }
 
-    if (selectedChildCategory) {
+    if (selectedChildCategoryId) {
       return []
     }
 
-    return fallbackEntities
-  }, [entities?.entities, searchedEntities.entities, selectedChildCategory])
+    return []
+  }, [entities?.entities, searchedEntities.entities, selectedChildCategoryId])
+
+  const shouldShowResults = Boolean(searchedEntities.entities.length || selectedChildCategoryId)
+
+  const favoriteIdsSet = useMemo(() => new Set(favoriteIds), [favoriteIds])
+  const pendingFavoriteIdsSet = useMemo(() => new Set(pendingFavoriteIds), [pendingFavoriteIds])
+
+  const paginatedVisibleEntities = useMemo(() => {
+    const perPage = 6
+    if (visibleEntities.length <= perPage) return visibleEntities
+
+    const totalPages = Math.ceil(visibleEntities.length / perPage)
+    const normalizedPage = resultsPage % totalPages
+    const start = normalizedPage * perPage
+    return visibleEntities.slice(start, start + perPage)
+  }, [resultsPage, visibleEntities])
+
+  const hasResultsSlider = visibleEntities.length > 6
 
   const handleSelectMainCategory = (category: string) => {
     setSelectedMainCategory(category)
-    setSelectedChildCategory(undefined)
+    setSelectedCategoryPath([])
+    setResultsPage(0)
     dispatch(entitiesActions.resetEntities())
   }
 
-  const handleLoadEntities = (categoryId: number) => {
-    setSelectedChildCategory(categoryId)
+  const handleLoadEntities = (category: Category) => {
+    setSelectedCategoryPath((currentPath) => [...currentPath, category])
+    setResultsPage(0)
     dispatch(entitiesActions.resetEntities())
   }
+
+  const handleSelectPathLevel = (index: number) => {
+    if (index === 0) {
+      setSelectedCategoryPath([])
+      setResultsPage(0)
+      dispatch(entitiesActions.resetEntities())
+      return
+    }
+
+    setSelectedCategoryPath((currentPath) => currentPath.slice(0, index))
+    setResultsPage(0)
+    dispatch(entitiesActions.resetEntities())
+  }
+
+  const handleFavoriteToggle = async (entityId: number) => {
+    if (!loggedIn) {
+      setAuthPromptOpen(true)
+      return
+    }
+
+    setPendingFavoriteIds((currentIds) => [...currentIds, entityId])
+
+    try {
+      if (favoriteIdsSet.has(entityId)) {
+        await removeFavorite(entityId).unwrap()
+      } else {
+        await addFavorite(entityId).unwrap()
+      }
+    } finally {
+      setPendingFavoriteIds((currentIds) => currentIds.filter((currentId) => currentId !== entityId))
+    }
+  }
+
+  const renderFavoriteButton = (entityId: number) => (
+    <FavoriteIconButton
+      active={favoriteIdsSet.has(entityId)}
+      disabled={pendingFavoriteIdsSet.has(entityId)}
+      onClick={(event) => {
+        event.preventDefault()
+        event.stopPropagation()
+        void handleFavoriteToggle(entityId)
+      }}
+      className={styles.cardFavorite}
+      ariaLabel={favoriteIdsSet.has(entityId) ? 'Убрать из избранного' : 'Добавить в избранное'}
+    />
+  )
+
+  const renderResultCard = ({ entity_id, name, photo, address, date }: Entity) => (
+    <article key={entity_id} className={styles.cardShell}>
+      {renderFavoriteButton(entity_id)}
+      <Link to={`/place/${entity_id}`} className={styles.resultCard}>
+        <img src={resolveEntityPhoto(photo)} alt={name} className={styles.resultCard__image} />
+        <div className={styles.resultCard__body}>
+          <span>{address || 'Городская локация'}</span>
+          <strong>{name}</strong>
+          <p>{date || 'Сегодня'}</p>
+        </div>
+      </Link>
+    </article>
+  )
+
+  const renderSelectionCard = ({ entity_id, name, photo }: Entity, index: number) => (
+    <article key={`${entity_id}-${index}`} className={styles.cardShell}>
+      {renderFavoriteButton(entity_id)}
+      <Link to={`/place/${entity_id}`} className={styles.railCard}>
+        <div className={styles.railCard__media}>
+          <img src={resolveEntityPhoto(photo)} alt={name} />
+        </div>
+        <div className={styles.railCard__body}>
+          <strong>{name}</strong>
+        </div>
+      </Link>
+    </article>
+  )
 
   return (
     <>
@@ -263,21 +334,47 @@ export const MainPage = () => {
               </button>
             </div>
 
-            <div className={styles.childCategories}>
-              {isMainCategoryLoading ? (
-                <div className="loader" />
-              ) : (
-                childCategories.map(({ category_id, name }) => (
-                  <button
-                    key={category_id}
-                    type="button"
-                    className={`${styles.childCategories__item} ${selectedChildCategory === category_id ? styles.childCategories__item_active : ''}`}
-                    onClick={() => handleLoadEntities(category_id)}
-                  >
-                    {name}
-                  </button>
-                ))
-              )}
+            <div className={`${styles.childCategories} ${branchOnNextLine ? styles.childCategories_stacked : ''}`}>
+              <div className={styles.childCategories__path}>
+                {breadcrumbCategories.map((category, index) => (
+                  <div key={`${category.category_id}-${category.name}`} className={styles.childCategories__crumb}>
+                    {index > 0 ? <span className={styles.childCategories__divider} /> : null}
+                    <button
+                      type="button"
+                      className={`${styles.childCategories__item} ${styles.childCategories__item_active}`}
+                      onClick={() => handleSelectPathLevel(index)}
+                    >
+                      {category.name}
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {shouldRenderBranch ? (
+                <div
+                  className={`${styles.childCategories__branch} ${branchOnNextLine ? styles.childCategories__branch_nextLine : ''}`}
+                >
+                  {isMainCategoryLoading || isNestedCategoriesLoading ? (
+                    <div className="loader" />
+                  ) : (
+                    childCategories.map(({ category_id, name }) => (
+                      <button
+                        key={category_id}
+                        type="button"
+                        className={styles.childCategories__item}
+                        onClick={() =>
+                          handleLoadEntities({
+                            category_id,
+                            name,
+                            parent_id: selectedChildCategoryId ?? ROOT_CATEGORY_IDS[selectedMainCategory],
+                          })}
+                      >
+                        {name}
+                      </button>
+                    ))
+                  )}
+                </div>
+              ) : null}
             </div>
           </div>
         </section>
@@ -300,38 +397,55 @@ export const MainPage = () => {
               </Link> */}
             </div>
 
-            <div className={styles.resultsGrid}>
-              {visibleEntities.length ? (
-                visibleEntities.slice(0, 3).map(({ entity_id, name, photo, address, date }) => (
-                  <Link key={entity_id} to={`/place/${entity_id}`} className={styles.resultCard}>
-                    <img src={photo} alt={name} className={styles.resultCard__image} />
-                    <div className={styles.resultCard__body}>
-                      <span>{address || 'Городская локация'}</span>
-                      <strong>{name}</strong>
-                      <p>{date || 'Сегодня'}</p>
-                    </div>
-                  </Link>
-                ))
-              ) : (
-                <div className={styles.emptyState}>В этой категории пока ничего нет</div>
-              )}
-            </div>
+            {shouldShowResults ? (
+              <div className={styles.resultsGrid}>
+                {visibleEntities.length ? (
+                  paginatedVisibleEntities.map(renderResultCard)
+                ) : (
+                  <div className={styles.emptyState}>В этой категории пока ничего нет</div>
+                )}
+              </div>
+            ) : null}
+
+            {shouldShowResults && hasResultsSlider ? (
+              <div className={styles.resultsControls}>
+                <button
+                  type="button"
+                  className={styles.resultsControls__button}
+                  onClick={() =>
+                    setResultsPage((currentPage) => {
+                      const totalPages = Math.ceil(visibleEntities.length / 6)
+                      return (currentPage - 1 + totalPages) % totalPages
+                    })}
+                >
+                  Назад
+                </button>
+                <button
+                  type="button"
+                  className={styles.resultsControls__button}
+                  onClick={() =>
+                    setResultsPage((currentPage) => {
+                      const totalPages = Math.ceil(visibleEntities.length / 6)
+                      return (currentPage + 1) % totalPages
+                    })}
+                >
+                  Вперед
+                </button>
+              </div>
+            ) : null}
 
             <div className={`${styles.sectionHeading} ${styles.sectionHeading_spaced}`} id="collections">
               <span>Подборки</span>
               <h2>Самые интересные места и мероприятия, подобранные специально для вас</h2>
             </div>
 
-            <div className={styles.rail}>
-              {selectionCards.map(({ entity_id, name, photo }, index) => (
-                <Link key={`${entity_id}-${index}`} to={`/place/${entity_id}`} className={styles.railCard}>
-                  <img src={photo} alt={name} />
-                  <div className={styles.railCard__overlay}>
-                    <strong>{name}</strong>
-                  </div>
-                </Link>
-              ))}
-            </div>
+            {selectionCards.length ? (
+              <div className={styles.railWrap}>
+                <div className={styles.rail}>
+                  {selectionCards.map(renderSelectionCard)}
+                </div>
+              </div>
+            ) : null}
           </div>
         </section>
 
@@ -383,6 +497,7 @@ export const MainPage = () => {
             </div>
           </div>
         </section>
+        <AuthRequiredModal open={authPromptOpen} onClose={() => setAuthPromptOpen(false)} />
       </Layout>
     </>
   )

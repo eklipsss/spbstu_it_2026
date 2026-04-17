@@ -1,15 +1,13 @@
 import { rtkApi } from '@/shared/api'
-import { getImagesByEntityId } from '@/shared/mocks/data'
-
-const wait = (ms = 140) => new Promise((resolve) => setTimeout(resolve, ms))
+import { resolveEntityPhoto } from '@/shared/utils'
 
 export const categoriesApi = rtkApi.injectEndpoints({
   endpoints: (build) => ({
     getPlaceImages: build.query<{ links: string[] }, string | undefined>({
-      async queryFn(id) {
-        await wait()
-        return { data: { links: getImagesByEntityId(id) } }
-      },
+      query: (id) => `/entities/${id}`,
+      transformResponse: (entity: { photo?: string | null }) => ({
+        links: entity.photo ? [resolveEntityPhoto(entity.photo)] : [],
+      }),
     }),
   }),
 })

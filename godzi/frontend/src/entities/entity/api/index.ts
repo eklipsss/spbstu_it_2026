@@ -1,30 +1,59 @@
 import { rtkApi } from '@/shared/api'
 import { Entity } from '@/shared/types'
-import { getEntityById, getEntitiesByCategoryId, searchEntitiesByPhrase } from '@/shared/mocks/data'
-
-const wait = (ms = 220) => new Promise((resolve) => setTimeout(resolve, ms))
 
 export const entityApi = rtkApi.injectEndpoints({
   endpoints: (build) => ({
     getEntityData: build.query<Entity | undefined, { id: string | undefined }>({
-      async queryFn({ id }) {
-        await wait()
-        return { data: getEntityById(id) }
-      },
+      query: ({ id }) => `/entities/${id}`,
     }),
     getEntities: build.query<{ entities: Entity[]; total: number }, number | undefined>({
-      async queryFn(id) {
-        await wait()
-        const entities = getEntitiesByCategoryId(id)
+      async queryFn(categoryId, _api, _extraOptions, fetchWithBQ) {
+        if (!categoryId) {
+          return { data: { entities: [], total: 0 } }
+        }
+
+        let categoryIds = [categoryId]
+
+        const childCategoriesResponse = await fetchWithBQ(
+          `/categories/all_children_categories?category_id=${categoryId}`,
+        )
+
+        if (!childCategoriesResponse.error) {
+          const childCategories = (childCategoriesResponse.data as { category_id: number }[]) ?? []
+          categoryIds = [categoryId, ...childCategories.map(({ category_id }) => category_id)]
+        }
+
+        const responses = await Promise.all(
+          categoryIds.map((id) =>
+            fetchWithBQ(`/entities/get_entities?categories_ids=${id}&skip=0&limit=30`),
+          ),
+        )
+
+        const entitiesMap = new Map<number, Entity>()
+
+        responses.forEach((response) => {
+          if (response.error) return
+
+          const entities = (response.data as Entity[]) ?? []
+          entities.forEach((entity) => {
+            entitiesMap.set(entity.entity_id, entity)
+          })
+        })
+
+        const entities = Array.from(entitiesMap.values())
         return { data: { entities, total: entities.length } }
       },
     }),
     searchEntities: build.query<{ entities: Entity[]; total: number }, string>({
-      async queryFn(name) {
-        await wait(160)
-        const entities = searchEntitiesByPhrase(name)
-        return { data: { entities, total: entities.length } }
-      },
+      query: (name) => ({
+        url: '/entities/get_entities',
+        params: {
+          name,
+          skip: 0,
+          limit: 30,
+        },
+      }),
+      transformResponse: (entities: Entity[]) => ({ entities, total: entities.length }),
     }),
   }),
 })

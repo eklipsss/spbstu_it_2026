@@ -28,7 +28,7 @@ export const mockEntities: Entity[] = [
     address: 'Санкт-Петербург, наб. канала Грибоедова, 18',
     age_gap: '18+',
     average_cost: '1500 руб',
-    categories_ids: ['2'],
+    categories_ids: [2],
     contacts: '+7 (999) 000-00-01',
     contributors: 'Редакция GOdzi',
     cost: '1500 руб',
@@ -38,7 +38,7 @@ export const mockEntities: Entity[] = [
     links: 'https://example.com',
     metro: 'Невский проспект',
     source_link: '',
-    tags_ids: ['cocktails', 'date'],
+    tags_ids: [201, 202],
   },
   {
     entity_id: 102,
@@ -47,7 +47,7 @@ export const mockEntities: Entity[] = [
     address: 'Санкт-Петербург, Литейный проспект, 34',
     age_gap: '12+',
     average_cost: 'Бесплатно',
-    categories_ids: ['5'],
+    categories_ids: [5],
     contacts: '+7 (999) 000-00-00',
     contributors: 'Редакция GOdzi',
     cost: '0 руб',
@@ -57,7 +57,7 @@ export const mockEntities: Entity[] = [
     links: 'https://example.com',
     metro: 'Маяковская',
     source_link: '',
-    tags_ids: ['art', 'weekend'],
+    tags_ids: [203, 204],
   },
   {
     entity_id: 103,
@@ -66,7 +66,7 @@ export const mockEntities: Entity[] = [
     address: 'Санкт-Петербург, м. Чернышевская',
     age_gap: '0+',
     average_cost: 'Бесплатно',
-    categories_ids: ['4'],
+    categories_ids: [4],
     contacts: '',
     contributors: 'Редакция GOdzi',
     cost: '0',
@@ -76,7 +76,7 @@ export const mockEntities: Entity[] = [
     links: 'https://example.com/walk',
     metro: 'Чернышевская',
     source_link: '',
-    tags_ids: ['walk', 'photo'],
+    tags_ids: [205, 206],
   },
   {
     entity_id: 104,
@@ -85,7 +85,7 @@ export const mockEntities: Entity[] = [
     address: 'Санкт-Петербург, улица Белинского, 12',
     age_gap: '0+',
     average_cost: '700 руб',
-    categories_ids: ['1'],
+    categories_ids: [1],
     contacts: '+7 (999) 000-00-03',
     contributors: 'Редакция GOdzi',
     cost: '700 руб',
@@ -95,7 +95,7 @@ export const mockEntities: Entity[] = [
     links: 'https://example.com',
     metro: 'Гостиный двор',
     source_link: '',
-    tags_ids: ['coffee', 'breakfast'],
+    tags_ids: [207, 208],
   },
   {
     entity_id: 105,
@@ -104,7 +104,7 @@ export const mockEntities: Entity[] = [
     address: 'Санкт-Петербург, Севкабель Порт',
     age_gap: '0+',
     average_cost: 'Бесплатно',
-    categories_ids: ['6'],
+    categories_ids: [6],
     contacts: '',
     contributors: 'Редакция GOdzi',
     cost: '0 руб',
@@ -114,7 +114,7 @@ export const mockEntities: Entity[] = [
     links: 'https://example.com',
     metro: 'Приморская',
     source_link: '',
-    tags_ids: ['market', 'weekend'],
+    tags_ids: [209, 204],
   },
   {
     entity_id: 106,
@@ -123,7 +123,7 @@ export const mockEntities: Entity[] = [
     address: 'Санкт-Петербург, Невский проспект, 30',
     age_gap: '6+',
     average_cost: '2200 руб',
-    categories_ids: ['8'],
+    categories_ids: [8],
     contacts: '+7 (999) 000-00-00',
     contributors: 'Редакция GOdzi',
     cost: '2200 руб',
@@ -133,7 +133,7 @@ export const mockEntities: Entity[] = [
     links: 'https://example.com',
     metro: 'Адмиралтейская',
     source_link: '',
-    tags_ids: ['music', 'date'],
+    tags_ids: [210, 202],
   },
 ]
 
@@ -205,12 +205,12 @@ const normalize = (value: string) => value.trim().toLowerCase()
 export const getEntityById = (id?: string) => mockEntities.find((item) => String(item.entity_id) === String(id))
 
 export const getEntitiesByCategoryId = (categoryId?: number) =>
-  mockEntities.filter((item) => item.categories_ids.includes(String(categoryId)))
+  mockEntities.filter((item) => item.categories_ids.includes(Number(categoryId)))
 
 export const searchEntitiesByPhrase = (phrase: string) => {
   const needle = normalize(phrase)
   return mockEntities.filter((item) => {
-    const haystacks = [item.name, item.description, item.address, item.metro, ...(item.tags_ids ?? [])]
+    const haystacks = [item.name, item.description, item.address, item.metro, ...(item.tags_ids ?? []).map(String)]
     return haystacks.some((part) => part && normalize(part).includes(needle))
   })
 }

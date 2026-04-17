@@ -1,8 +1,10 @@
 import { demoProfile } from '@/shared/mocks/profile'
+import type { AuthUser } from '@/shared/types'
 
 export type StoredProfile = typeof demoProfile
 
 const AUTH_KEY = 'godzi-auth'
+const TOKEN_KEY = 'godzi-token'
 const PROFILE_KEY = 'godzi-profile'
 const AUTH_EVENT = 'godzi-auth-changed'
 const PROFILE_EVENT = 'godzi-profile-changed'
@@ -33,14 +35,35 @@ export const saveStoredProfile = (profile: StoredProfile) => {
   dispatchAppEvent(PROFILE_EVENT)
 }
 
+export const buildStoredProfileFromUser = (
+  user: AuthUser,
+  overrides: Partial<StoredProfile> = {},
+): StoredProfile => ({
+  ...demoProfile,
+  fullName: user.full_name?.trim() || demoProfile.fullName,
+  email: user.email,
+  phone: user.phone_number?.trim() || demoProfile.phone,
+  city: user.city?.trim() || demoProfile.city,
+  about: user.about?.trim() || demoProfile.about,
+  categories: user.categories?.length ? user.categories : demoProfile.categories,
+  tags: user.tags?.length ? user.tags : demoProfile.tags,
+  ...overrides,
+})
+
 export const isAuthenticated = () => {
   if (!canUseStorage()) return false
-  return window.localStorage.getItem(AUTH_KEY) === 'true'
+  return Boolean(window.localStorage.getItem(TOKEN_KEY))
 }
 
-export const signIn = (profile?: StoredProfile) => {
+export const getAccessToken = () => {
+  if (!canUseStorage()) return null
+  return window.localStorage.getItem(TOKEN_KEY)
+}
+
+export const signIn = (token: string, profile?: StoredProfile) => {
   if (!canUseStorage()) return
   window.localStorage.setItem(AUTH_KEY, 'true')
+  window.localStorage.setItem(TOKEN_KEY, token)
   if (profile) {
     saveStoredProfile(profile)
   }
@@ -50,6 +73,7 @@ export const signIn = (profile?: StoredProfile) => {
 export const signOut = () => {
   if (!canUseStorage()) return
   window.localStorage.removeItem(AUTH_KEY)
+  window.localStorage.removeItem(TOKEN_KEY)
   dispatchAppEvent(AUTH_EVENT)
 }
 

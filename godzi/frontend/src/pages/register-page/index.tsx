@@ -1,12 +1,17 @@
-import { categoryOptions, tagOptions } from '@/shared/mocks/preferences'
+import { useRegisterMutation } from '@/entities/auth/api'
+import { useGetCategoriesQuery } from '@/entities/categories/api'
+import { useGetTagsQuery } from '@/entities/tags/api'
 import { Layout } from '@/shared/components'
-import { saveStoredProfile, signIn } from '@/shared/utils/session'
+import { rtkApi } from '@/shared/api'
+import { buildStoredProfileFromUser, saveStoredProfile, signIn } from '@/shared/utils/session'
 import { Helmet } from 'react-helmet-async'
 import { FormEvent, useMemo, useState } from 'react'
+import { useDispatch } from 'react-redux'
 import { Link, useNavigate } from 'react-router-dom'
 import styles from './register-page.module.scss'
 
 type RegistrationResult = 'success' | 'error' | null
+type FieldName = 'fullName' | 'email' | 'phone' | 'password' | 'repeatPassword'
 
 const initialForm = {
   fullName: '',
@@ -17,26 +22,103 @@ const initialForm = {
   agreed: false,
 }
 
+const normalizePhoneNumber = (value: string) => {
+  const digits = value.replace(/\D/g, '')
+  if (!digits) return ''
+
+  if (digits.startsWith('8') && digits.length === 11) {
+    return `+7${digits.slice(1)}`
+  }
+
+  if (digits.startsWith('7') && digits.length === 11) {
+    return `+${digits}`
+  }
+
+  return value.trim()
+}
+
+const formatPhoneNumber = (value: string) => {
+  const digits = value.replace(/\D/g, '').slice(0, 11)
+  if (!digits) return ''
+
+  let normalized = digits
+
+  if (normalized.startsWith('8')) {
+    normalized = `7${normalized.slice(1)}`
+  }
+
+  if (!normalized.startsWith('7')) {
+    normalized = `7${normalized.slice(0, 10)}`
+  }
+
+  normalized = normalized.slice(0, 11)
+
+  const area = normalized.slice(1, 4)
+  const first = normalized.slice(4, 7)
+  const second = normalized.slice(7, 9)
+  const third = normalized.slice(9, 11)
+
+  let formatted = '+7'
+  if (area) formatted += ` (${area}`
+  if (area.length === 3) formatted += ')'
+  if (first) formatted += ` ${first}`
+  if (second) formatted += `-${second}`
+  if (third) formatted += `-${third}`
+
+  return formatted
+}
+
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const phonePattern = /^(?:\+7\d{10}|8\d{10})$/
+
 export const RegisterPage = () => {
+  const dispatch = useDispatch()
   const navigate = useNavigate()
   const [step, setStep] = useState<1 | 2>(1)
   const [result, setResult] = useState<RegistrationResult>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [form, setForm] = useState(initialForm)
+  const [touchedFields, setTouchedFields] = useState<Record<FieldName, boolean>>({
+    fullName: false,
+    email: false,
+    phone: false,
+    password: false,
+    repeatPassword: false,
+  })
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
   const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [register] = useRegisterMutation()
+  const { data: categoryOptions = [] } = useGetCategoriesQuery({ skip: 0, limit: 200 })
+  const { data: tagOptions = [] } = useGetTagsQuery({ skip: 0, limit: 200 })
+
+  const availableCategories = useMemo(
+    () => categoryOptions.filter((item) => item.parent_id !== null),
+    [categoryOptions],
+  )
+  const formErrors = useMemo(() => {
+    const fullName = form.fullName.trim()
+    const email = form.email.trim().toLowerCase()
+    const phone = normalizePhoneNumber(form.phone)
+    const password = form.password
+    const repeatPassword = form.repeatPassword
+
+    return {
+      fullName:
+        fullName ? '' : 'Поле не может быть пустым',
+      email:
+        emailPattern.test(email) ? '' : 'Неверный формат почты',
+      phone:
+        phonePattern.test(phone) ? '' : 'Неверный формат телефона',
+      password:
+        password.length >= 4 ? '' : 'Пароль должен содержать не менее 4х символов',
+      repeatPassword:
+        repeatPassword === password ? '' : 'Пароль не совпадает',
+    }
+  }, [form])
 
   const isFirstStepValid = useMemo(() => {
-    return Boolean(
-      form.fullName.trim() &&
-      form.email.trim() &&
-      form.phone.trim() &&
-      form.password &&
-      form.repeatPassword &&
-      form.password === form.repeatPassword &&
-      form.agreed,
-    )
-  }, [form])
+    return Object.values(formErrors).every((value) => !value) && form.agreed
+  }, [form, formErrors])
 
   const toggleSelection = (value: string, current: string[], setter: (items: string[]) => void) => {
     if (current.includes(value)) {
@@ -45,6 +127,14 @@ export const RegisterPage = () => {
     }
 
     setter([...current, value])
+  }
+
+  const handleFieldChange = (field: FieldName, value: string) => {
+    setTouchedFields((current) => ({ ...current, [field]: true }))
+    setForm((current) => ({
+      ...current,
+      [field]: field === 'phone' ? formatPhoneNumber(value) : value,
+    }))
   }
 
   const handleFirstStepSubmit = (event: FormEvent) => {
@@ -57,30 +147,40 @@ export const RegisterPage = () => {
     event.preventDefault()
 
     setIsSubmitting(true)
-    await new Promise((resolve) => setTimeout(resolve, 500))
-
-    const isSuccess =
-      isFirstStepValid &&
-      selectedCategories.length > 0 &&
-      selectedTags.length > 0 &&
-      !form.email.toLowerCase().includes('error')
-
-    if (isSuccess) {
-      const profile = {
-        fullName: form.fullName.trim(),
-        email: form.email.trim().toLowerCase(),
-        phone: form.phone.trim(),
-        city: 'Санкт-Петербург',
-        about: 'Расскажите о своих любимых городских сценариях в профиле.',
-        categories: selectedCategories,
-        tags: selectedTags,
-      }
-      saveStoredProfile(profile)
-      signIn(profile)
+    if (!isFirstStepValid || selectedCategories.length === 0 || selectedTags.length === 0) {
+      setResult('error')
+      setIsSubmitting(false)
+      return
     }
 
-    setResult(isSuccess ? 'success' : 'error')
-    setIsSubmitting(false)
+    try {
+      const response = await register({
+        email: form.email.trim().toLowerCase(),
+        password: form.password,
+        full_name: form.fullName.trim(),
+        phone_number: normalizePhoneNumber(form.phone),
+        city: 'Санкт-Петербург',
+        about: '',
+        categories: selectedCategories,
+        tags: selectedTags,
+      }).unwrap()
+
+      const profile = buildStoredProfileFromUser(response.user, {
+        city: response.user.city ?? 'Санкт-Петербург',
+        about: response.user.about ?? '',
+        categories: response.user.categories,
+        tags: response.user.tags,
+      })
+
+      saveStoredProfile(profile)
+      signIn(response.access_token, profile)
+      dispatch(rtkApi.util.resetApiState())
+      setResult('success')
+    } catch {
+      setResult('error')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleCloseModal = () => {
@@ -90,6 +190,13 @@ export const RegisterPage = () => {
     }
 
     setStep(1)
+    setTouchedFields({
+      fullName: false,
+      email: false,
+      phone: false,
+      password: false,
+      repeatPassword: false,
+    })
     setSelectedCategories([])
     setSelectedTags([])
     setResult(null)
@@ -115,8 +222,10 @@ export const RegisterPage = () => {
                       type="text"
                       placeholder="Имя"
                       value={form.fullName}
-                      onChange={(event) => setForm({ ...form, fullName: event.target.value })}
+                      aria-invalid={Boolean(touchedFields.fullName && formErrors.fullName)}
+                      onChange={(event) => handleFieldChange('fullName', event.target.value)}
                     />
+                    {touchedFields.fullName && formErrors.fullName ? <small className={styles.fieldHint}>{formErrors.fullName}</small> : null}
                   </label>
 
                   <label className={styles.field}>
@@ -125,18 +234,22 @@ export const RegisterPage = () => {
                       type="email"
                       placeholder="name@mail.ru"
                       value={form.email}
-                      onChange={(event) => setForm({ ...form, email: event.target.value })}
+                      aria-invalid={Boolean(touchedFields.email && formErrors.email)}
+                      onChange={(event) => handleFieldChange('email', event.target.value)}
                     />
+                    {touchedFields.email && formErrors.email ? <small className={styles.fieldHint}>{formErrors.email}</small> : null}
                   </label>
 
                   <label className={styles.field}>
                     <span>Номер телефона</span>
                     <input
                       type="tel"
-                      placeholder="+7 (999) 000-00-00"
+                      placeholder="+7 (999) 999-99-99"
                       value={form.phone}
-                      onChange={(event) => setForm({ ...form, phone: event.target.value })}
+                      aria-invalid={Boolean(touchedFields.phone && formErrors.phone)}
+                      onChange={(event) => handleFieldChange('phone', event.target.value)}
                     />
+                    {touchedFields.phone && formErrors.phone ? <small className={styles.fieldHint}>{formErrors.phone}</small> : null}
                   </label>
 
                   <label className={styles.field}>
@@ -144,8 +257,10 @@ export const RegisterPage = () => {
                     <input
                       type="password"
                       value={form.password}
-                      onChange={(event) => setForm({ ...form, password: event.target.value })}
+                      aria-invalid={Boolean(touchedFields.password && formErrors.password)}
+                      onChange={(event) => handleFieldChange('password', event.target.value)}
                     />
+                    {touchedFields.password && formErrors.password ? <small className={styles.fieldHint}>{formErrors.password}</small> : null}
                   </label>
 
                   <label className={styles.field}>
@@ -153,8 +268,10 @@ export const RegisterPage = () => {
                     <input
                       type="password"
                       value={form.repeatPassword}
-                      onChange={(event) => setForm({ ...form, repeatPassword: event.target.value })}
+                      aria-invalid={Boolean(touchedFields.repeatPassword && formErrors.repeatPassword)}
+                      onChange={(event) => handleFieldChange('repeatPassword', event.target.value)}
                     />
+                    {touchedFields.repeatPassword && formErrors.repeatPassword ? <small className={styles.fieldHint}>{formErrors.repeatPassword}</small> : null}
                   </label>
 
                   <label className={styles.checkbox}>
@@ -186,14 +303,14 @@ export const RegisterPage = () => {
                 <div className={styles.preferenceGroup}>
                   <span>Выберите категории</span>
                   <div className={styles.tagsGrid}>
-                    {categoryOptions.map((item) => (
+                    {availableCategories.map((item) => (
                       <button
-                        key={item}
+                        key={item.category_id}
                         type="button"
-                        className={`${styles.tagButton} ${selectedCategories.includes(item) ? styles.tagButton_active : ''}`}
-                        onClick={() => toggleSelection(item, selectedCategories, setSelectedCategories)}
+                        className={`${styles.tagButton} ${selectedCategories.includes(item.name) ? styles.tagButton_active : ''}`}
+                        onClick={() => toggleSelection(item.name, selectedCategories, setSelectedCategories)}
                       >
-                        {item}
+                        {item.name}
                       </button>
                     ))}
                   </div>
@@ -204,12 +321,12 @@ export const RegisterPage = () => {
                   <div className={styles.tagsGrid}>
                     {tagOptions.map((item) => (
                       <button
-                        key={item}
+                        key={item.tag_id}
                         type="button"
-                        className={`${styles.tagButton} ${selectedTags.includes(item) ? styles.tagButton_active : ''}`}
-                        onClick={() => toggleSelection(item, selectedTags, setSelectedTags)}
+                        className={`${styles.tagButton} ${selectedTags.includes(item.name) ? styles.tagButton_active : ''}`}
+                        onClick={() => toggleSelection(item.name, selectedTags, setSelectedTags)}
                       >
-                        {item}
+                        {item.name}
                       </button>
                     ))}
                   </div>

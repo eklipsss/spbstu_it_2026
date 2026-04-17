@@ -1,14 +1,53 @@
-import { categoryOptions, tagOptions } from '@/shared/mocks/preferences'
-import { getStoredProfile, saveStoredProfile } from '@/shared/utils/session'
+import { useGetMeQuery, useUpdateMeMutation } from '@/entities/auth/api'
+import { useGetCategoriesQuery } from '@/entities/categories/api'
+import { useGetTagsQuery } from '@/entities/tags/api'
+import { buildStoredProfileFromUser, getStoredProfile, isAuthenticated, saveStoredProfile } from '@/shared/utils/session'
 import { Layout } from '@/shared/components'
 import { Helmet } from 'react-helmet-async'
-import { FormEvent, useState } from 'react'
+import { FormEvent, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import styles from './edit-profile-page.module.scss'
+
+const normalizePhoneNumber = (value: string) => {
+  const digits = value.replace(/\D/g, '')
+  if (!digits) return ''
+
+  if (digits.startsWith('8') && digits.length === 11) {
+    return `+7${digits.slice(1)}`
+  }
+
+  if (digits.startsWith('7') && digits.length === 11) {
+    return `+${digits}`
+  }
+
+  return value.trim()
+}
 
 export const EditProfilePage = () => {
   const navigate = useNavigate()
   const [form, setForm] = useState(getStoredProfile())
+  const { data: me } = useGetMeQuery(undefined, { skip: !isAuthenticated() })
+  const [updateMe] = useUpdateMeMutation()
+  const { data: categoryOptions = [] } = useGetCategoriesQuery({ skip: 0, limit: 200 })
+  const { data: tagOptions = [] } = useGetTagsQuery({ skip: 0, limit: 200 })
+
+  const availableCategories = useMemo(
+    () => categoryOptions.filter((item) => item.parent_id !== null),
+    [categoryOptions],
+  )
+
+  useEffect(() => {
+    if (!me) return
+
+    setForm(
+      buildStoredProfileFromUser(me, {
+        city: me.city ?? '',
+        about: me.about ?? '',
+        categories: me.categories,
+        tags: me.tags,
+      }),
+    )
+  }, [me])
 
   const toggleSelection = (value: string, key: 'categories' | 'tags') => {
     const current = form[key]
@@ -18,9 +57,26 @@ export const EditProfilePage = () => {
     })
   }
 
-  const handleSubmit = (event: FormEvent) => {
+  const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
-    saveStoredProfile(form)
+    const updatedUser = await updateMe({
+      full_name: form.fullName,
+      email: form.email,
+      phone_number: normalizePhoneNumber(form.phone),
+      city: form.city,
+      about: form.about,
+      categories: form.categories,
+      tags: form.tags,
+    }).unwrap()
+
+    saveStoredProfile(
+      buildStoredProfileFromUser(updatedUser, {
+        city: updatedUser.city ?? '',
+        about: updatedUser.about ?? '',
+        categories: updatedUser.categories,
+        tags: updatedUser.tags,
+      }),
+    )
     navigate('/profile')
   }
 
@@ -71,14 +127,14 @@ export const EditProfilePage = () => {
               <div className={styles.preferences__block}>
                 <span className={styles.preferences__title}>Категории</span>
                 <div className={styles.preferences__chips}>
-                  {categoryOptions.map((item) => (
+                  {availableCategories.map((item) => (
                     <button
-                      key={item}
+                      key={item.category_id}
                       type="button"
-                      className={`${styles.tagButton} ${form.categories.includes(item) ? styles.tagButton_active : ''}`}
-                      onClick={() => toggleSelection(item, 'categories')}
+                      className={`${styles.tagButton} ${form.categories.includes(item.name) ? styles.tagButton_active : ''}`}
+                      onClick={() => toggleSelection(item.name, 'categories')}
                     >
-                      {item}
+                      {item.name}
                     </button>
                   ))}
                 </div>
@@ -89,12 +145,12 @@ export const EditProfilePage = () => {
                 <div className={styles.preferences__chips}>
                   {tagOptions.map((item) => (
                     <button
-                      key={item}
+                      key={item.tag_id}
                       type="button"
-                      className={`${styles.tagButton} ${form.tags.includes(item) ? styles.tagButton_active : ''}`}
-                      onClick={() => toggleSelection(item, 'tags')}
+                      className={`${styles.tagButton} ${form.tags.includes(item.name) ? styles.tagButton_active : ''}`}
+                      onClick={() => toggleSelection(item.name, 'tags')}
                     >
-                      {item}
+                      {item.name}
                     </button>
                   ))}
                 </div>

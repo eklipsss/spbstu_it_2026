@@ -2,9 +2,14 @@ import { Link } from 'react-router-dom'
 import styles from './info.module.scss'
 import { FC } from 'react'
 import { Entity } from '@/shared/types'
+import { FavoriteIconButton } from '@/shared/components'
+import { resolveEntityPhoto } from '@/shared/utils'
 
 interface PlacePageInfoProps {
   data?: Entity
+  isFavorite: boolean
+  isFavoriteUpdating: boolean
+  onFavoriteToggle: () => void
 }
 
 const placeDetails = (data?: Entity) => [
@@ -16,15 +21,16 @@ const placeDetails = (data?: Entity) => [
   data?.links ? { label: 'Сайт', value: data.links, href: data.links } : null,
 ].filter(Boolean) as { label: string; value: string; href?: string }[]
 
-export const PlacePageInfo: FC<PlacePageInfoProps> = ({ data }) => {
+export const PlacePageInfo: FC<PlacePageInfoProps> = ({ data, isFavorite, isFavoriteUpdating, onFavoriteToggle }) => {
   const details = placeDetails(data)
 
   return (
     <section className="container">
+      <Link className={styles.backLink} to="/">
+        ← Назад
+      </Link>
+
       <div className={styles.title__bar}>
-        <Link className={styles.title__bar__back} to="/">
-          ← Назад
-        </Link>
         <div className={styles.title__bar__body}>
           {/* <span className={styles.title__bar__eyebrow}>Карточка места</span> */}
           <h1 className={styles.title__bar__name}>{data?.name ?? 'Информация скоро появится'}</h1>
@@ -32,11 +38,23 @@ export const PlacePageInfo: FC<PlacePageInfoProps> = ({ data }) => {
             {data?.description ?? 'Краткое описание места/мероприятия'}
           </p>
         </div>
+        {data?.entity_id ? (
+          <FavoriteIconButton
+            active={isFavorite}
+            disabled={isFavoriteUpdating}
+            onClick={(event) => {
+              event.preventDefault()
+              onFavoriteToggle()
+            }}
+            className={styles.title__bar__favorite}
+            ariaLabel={isFavorite ? 'Убрать из избранного' : 'Добавить в избранное'}
+          />
+        ) : null}
       </div>
 
       <div className={styles.info}>
         <div className={styles.info__imageWrapper}>
-          <div className={styles.info__image} style={{ backgroundImage: `url(${data?.photo ?? ''})` }} />
+          <div className={styles.info__image} style={{ backgroundImage: `url(${resolveEntityPhoto(data?.photo)})` }} />
         </div>
 
         <div className={styles.info__wrapper}>

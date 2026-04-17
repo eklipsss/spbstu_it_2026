@@ -1,5 +1,6 @@
+import { useGetMeQuery } from '@/entities/auth/api'
 import { demoProfile } from '@/shared/mocks/profile'
-import { getStoredProfile, profileEventName } from '@/shared/utils/session'
+import { buildStoredProfileFromUser, getStoredProfile, isAuthenticated, profileEventName, saveStoredProfile } from '@/shared/utils/session'
 import { Layout } from '@/shared/components'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -7,6 +8,10 @@ import styles from './profile-page.module.scss'
 
 export const ProfilePage = () => {
   const [profile, setProfile] = useState(demoProfile)
+  const { data: me } = useGetMeQuery(undefined, {
+    skip: !isAuthenticated(),
+    refetchOnMountOrArgChange: true,
+  })
 
   useEffect(() => {
     const syncProfile = () => setProfile(getStoredProfile())
@@ -20,6 +25,19 @@ export const ProfilePage = () => {
       window.removeEventListener('storage', syncProfile)
     }
   }, [])
+
+  useEffect(() => {
+    if (!me) return
+
+    const nextProfile = buildStoredProfileFromUser(me, {
+      city: me.city ?? '',
+      about: me.about ?? '',
+      categories: me.categories,
+      tags: me.tags,
+    })
+    saveStoredProfile(nextProfile)
+    setProfile(nextProfile)
+  }, [me])
 
   return (
     <Layout>

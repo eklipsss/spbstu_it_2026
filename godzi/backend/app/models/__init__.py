@@ -1,6 +1,6 @@
 from app.models.category import Category, CategoryBase, CategoryCreate, CategoryPublic
 from app.models.entity import Entity, EntityBase, EntityCreate, EntityPublic, EntityUpdate
-from app.models.relations import EntityCategory, EntityTag, Like, UserEntity, Visit
+from app.models.relations import EntityCategory, EntityTag, Like, UserCategory, UserEntity, UserTag, Visit
 from app.models.relationtype import RelationType
 from app.models.role import Role, RoleCreate, RolePublic, UserRole
 from app.models.tag import Tag, TagCreate, TagPublic
@@ -67,6 +67,8 @@ __all__ = [
     "RelationType",
     "EntityCategory",
     "UserEntity",
+    "UserCategory",
+    "UserTag",
     "EntityTag",
     "Like",
     "Visit",

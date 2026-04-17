@@ -9,9 +9,12 @@ from app.core.content.categories import categories_to_create, categories_to_init
 from app.core.content.entities import entities_to_create
 from app.core.content.seed_utils import create_or_update_entity_with_relations
 from app.core.content.tags import tags_to_create
+from app import cruds
 from app.models.category import Category, CategoryCreate
+from app.models.relationtype import RelationType
 from app.models.role import Role, RoleCreate
 from app.models.tag import Tag, TagCreate
+from app.models.user import UserCreate
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +22,16 @@ roles_to_create = (
     RoleCreate(name="authorized_user"),
     RoleCreate(name="unauthorized_user"),
     RoleCreate(name="organisation"),
+)
+
+relation_types_to_create = ("favorite",)
+
+default_superuser = UserCreate(
+    email="admin@godzi.ru",
+    password="admin12345",
+    full_name="GOdzi Admin",
+    phone_number="+79990000000",
+    is_superuser=True,
 )
 
 
@@ -32,6 +45,10 @@ def _get_tag_by_name(session: Session, name: str) -> Tag | None:
 
 def _get_category_by_name(session: Session, name: str) -> Category | None:
     return session.exec(select(Category).where(Category.name == name)).first()
+
+
+def _get_relation_type_by_name(session: Session, name: str) -> RelationType | None:
+    return session.exec(select(RelationType).where(RelationType.name == name)).first()
 
 
 def _create_role(session: Session, role_in: RoleCreate) -> Role:
@@ -81,6 +98,33 @@ def seed_roles(session: Session) -> None:
             _create_role(session=session, role_in=role)
 
 
+def seed_relation_types(session: Session) -> None:
+    for name in relation_types_to_create:
+        if _get_relation_type_by_name(session=session, name=name) is None:
+            session.add(RelationType(name=name))
+    session.commit()
+
+
+def seed_superuser(session: Session) -> None:
+    existing_user = cruds.user.get_user_by_email(session=session, email=default_superuser.email)
+    if existing_user:
+        if not existing_user.is_superuser:
+            existing_user.is_superuser = True
+            session.add(existing_user)
+            session.commit()
+            session.refresh(existing_user)
+        return
+
+    admin_role = _get_role_by_name(session=session, name="authorized_user")
+    superuser = cruds.user.create_user(session=session, user_create=default_superuser)
+
+    if admin_role is not None:
+        superuser.role_id = admin_role.role_id
+        session.add(superuser)
+        session.commit()
+        session.refresh(superuser)
+
+
 def seed_tags(session: Session) -> None:
     for tag in tags_to_create:
         existing_tag = _get_tag_by_name(session=session, name=tag.name)
@@ -125,6 +169,7 @@ def init_db(
 ) -> None:
     if include_roles:
         seed_roles(session=session)
+        seed_relation_types(session=session)
 
     seed_tags(session=session)
     seed_categories(session=session)
