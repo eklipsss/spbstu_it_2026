@@ -55,6 +55,8 @@ services:
   frontend:
     build:
       context: ../frontend
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
     container_name: project-frontend
     restart: unless-stopped
     depends_on:
@@ -63,3 +65,18 @@ services:
       VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
     ports:
       - "3000:80"
+
+  admin-frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile.admin
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
+    container_name: project-admin-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
+    ports:
+      - "3002:80"

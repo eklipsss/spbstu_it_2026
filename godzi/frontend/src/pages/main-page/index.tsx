@@ -50,7 +50,7 @@ export const MainPage = () => {
   const [loggedIn, setLoggedIn] = useState(() => isAuthenticated())
   const [selectedMainCategory, setSelectedMainCategory] = useState<string>('Места')
   const [selectedCategoryPath, setSelectedCategoryPath] = useState<Category[]>([])
-  const [resultsPage, setResultsPage] = useState(0)
+  const [visibleResultsCount, setVisibleResultsCount] = useState(6)
   const [authPromptOpen, setAuthPromptOpen] = useState(false)
   const [pendingFavoriteIds, setPendingFavoriteIds] = useState<number[]>([])
 
@@ -169,40 +169,34 @@ export const MainPage = () => {
   const pendingFavoriteIdsSet = useMemo(() => new Set(pendingFavoriteIds), [pendingFavoriteIds])
 
   const paginatedVisibleEntities = useMemo(() => {
-    const perPage = 6
-    if (visibleEntities.length <= perPage) return visibleEntities
+    return visibleEntities.slice(0, visibleResultsCount)
+  }, [visibleEntities, visibleResultsCount])
 
-    const totalPages = Math.ceil(visibleEntities.length / perPage)
-    const normalizedPage = resultsPage % totalPages
-    const start = normalizedPage * perPage
-    return visibleEntities.slice(start, start + perPage)
-  }, [resultsPage, visibleEntities])
-
-  const hasResultsSlider = visibleEntities.length > 6
+  const hasMoreResults = visibleEntities.length > paginatedVisibleEntities.length
 
   const handleSelectMainCategory = (category: string) => {
     setSelectedMainCategory(category)
     setSelectedCategoryPath([])
-    setResultsPage(0)
+    setVisibleResultsCount(6)
     dispatch(entitiesActions.resetEntities())
   }
 
   const handleLoadEntities = (category: Category) => {
     setSelectedCategoryPath((currentPath) => [...currentPath, category])
-    setResultsPage(0)
+    setVisibleResultsCount(6)
     dispatch(entitiesActions.resetEntities())
   }
 
   const handleSelectPathLevel = (index: number) => {
     if (index === 0) {
       setSelectedCategoryPath([])
-      setResultsPage(0)
+      setVisibleResultsCount(6)
       dispatch(entitiesActions.resetEntities())
       return
     }
 
     setSelectedCategoryPath((currentPath) => currentPath.slice(0, index))
-    setResultsPage(0)
+    setVisibleResultsCount(6)
     dispatch(entitiesActions.resetEntities())
   }
 
@@ -407,29 +401,15 @@ export const MainPage = () => {
               </div>
             ) : null}
 
-            {shouldShowResults && hasResultsSlider ? (
+            {shouldShowResults && hasMoreResults ? (
               <div className={styles.resultsControls}>
                 <button
                   type="button"
                   className={styles.resultsControls__button}
                   onClick={() =>
-                    setResultsPage((currentPage) => {
-                      const totalPages = Math.ceil(visibleEntities.length / 6)
-                      return (currentPage - 1 + totalPages) % totalPages
-                    })}
+                    setVisibleResultsCount((currentCount) => Math.min(currentCount + 6, visibleEntities.length))}
                 >
-                  Назад
-                </button>
-                <button
-                  type="button"
-                  className={styles.resultsControls__button}
-                  onClick={() =>
-                    setResultsPage((currentPage) => {
-                      const totalPages = Math.ceil(visibleEntities.length / 6)
-                      return (currentPage + 1) % totalPages
-                    })}
-                >
-                  Вперед
+                  Загрузить еще
                 </button>
               </div>
             ) : null}

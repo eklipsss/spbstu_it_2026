@@ -21,6 +21,7 @@ class EntityBase(SQLModel):
     average_cost: Optional[str] = None
     age_gap: Optional[str] = None
     date: Optional[str] = None
+    is_featured: bool = False
 
 
 class EntityBaseWithDates(TimeStampModel, EntityBase):
@@ -45,6 +46,9 @@ class EntityUpdate(EntityBase):
     average_cost: str | None = None
     age_gap: str | None = None
     date: str | None = None
+    is_featured: bool | None = None
+    category_ids: list[int] | None = None
+    tag_ids: list[int] | None = None
 
 
 class EntityPublic(EntityBase):

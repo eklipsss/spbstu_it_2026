@@ -5,9 +5,10 @@ export const recommendationsApi = rtkApi.injectEndpoints({
   endpoints: (build) => ({
     getRecommendations: build.query<Entity[], { skip: number; limit: number }>({
       query: ({ skip, limit }) => ({
-        url: '/entities/get_entities',
+        url: '/entities/get_recommendations',
         params: { skip, limit },
       }),
+      providesTags: ['Recommendations'],
     }),
   }),
 })

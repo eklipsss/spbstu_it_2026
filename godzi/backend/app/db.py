@@ -85,6 +85,19 @@ def ensure_user_profile_columns() -> None:
             connection.execute(text(f'ALTER TABLE "user" {statement}'))
 
 
+def ensure_entity_admin_columns() -> None:
+    inspector = inspect(engine)
+    if "entity" not in inspector.get_table_names():
+        return
+
+    existing_columns = {column["name"] for column in inspector.get_columns("entity")}
+    if "is_featured" in existing_columns:
+        return
+
+    with engine.begin() as connection:
+        connection.execute(text('ALTER TABLE "entity" ADD COLUMN is_featured BOOLEAN NOT NULL DEFAULT false'))
+
+
 def get_session():
     with Session(engine) as session:
         yield session

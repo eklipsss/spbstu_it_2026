@@ -9,6 +9,7 @@ export interface Entity {
   date: string
   description: string
   entity_id: number
+  is_featured?: boolean
   links: string
   metro: string
   name: string

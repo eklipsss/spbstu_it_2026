@@ -29,7 +29,19 @@ def update_entity(entity_id: int, entity_update: EntityUpdate, session: SessionD
     entity = cruds.entity.get_one_by_id(session=session, id=entity_id)
     if not entity:
         raise HTTPException(status_code=404, detail="Entity not found")
-    updated_entity = cruds.entity.update(session=session, obj_current=entity, obj_new=entity_update)
+    if entity_update.category_ids is not None:
+        for category_id in entity_update.category_ids:
+            category = cruds.category.get_one_by_id(session=session, id=category_id)
+            if category is None:
+                raise HTTPException(status_code=404, detail=f"Category {category_id} not found")
+
+    if entity_update.tag_ids is not None:
+        for tag_id in entity_update.tag_ids:
+            tag = cruds.tag.get_one_by_id(session=session, id=tag_id)
+            if tag is None:
+                raise HTTPException(status_code=404, detail=f"Tag {tag_id} not found")
+
+    updated_entity = cruds.entity.update_with_relations(session=session, entity=entity, entity_update=entity_update)
     return EntityPublic.from_model(updated_entity)
 
 
@@ -38,7 +50,7 @@ def delete_entity(entity_id: int, session: SessionDep) -> dict[str, str]:
     entity = cruds.entity.get_one_by_id(session=session, id=entity_id)
     if not entity:
         raise HTTPException(status_code=404, detail="Entity not found")
-    cruds.entity.remove(session=session, id=entity_id)
+    cruds.entity.remove_with_relations(session=session, id=entity_id)
     return {"message": "Entity deleted successfully"}
 
 
@@ -71,6 +83,15 @@ def get_entities(
 
 @router.get("/get_recommendations", response_model=list[EntityPublic])
 def get_recommendations(session: SessionDep, pagination: PaginationDep) -> list[EntityPublic]:
+    featured_entities = cruds.entity.get_list(
+        session=session,
+        filters=[cruds.entity.model.is_featured.is_(True)],
+        skip=pagination.skip,
+        limit=pagination.limit,
+    )
+    if featured_entities:
+        return [EntityPublic.from_model(entity) for entity in featured_entities]
+
     entities = cruds.entity.get_by_name_like(
         session=session,
         shuffle=True,

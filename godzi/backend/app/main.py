@@ -13,6 +13,7 @@ from app.core.db import (
     should_seed_static_content_on_startup,
 )
 from app.db import create_db_and_tables, ensure_user_profile_columns
+from app.db import ensure_entity_admin_columns
 from app.db import engine
 from app.models import *  # noqa: F401,F403
 
@@ -21,6 +22,7 @@ from app.models import *  # noqa: F401,F403
 async def lifespan(_: FastAPI):
     create_db_and_tables()
     ensure_user_profile_columns()
+    ensure_entity_admin_columns()
     with Session(engine) as session:
         seed_roles(session=session)
         seed_relation_types(session=session)
@@ -37,10 +39,14 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "http://localhost:3001",
+        "http://localhost:3002",
         "http://localhost:5173",
+        "http://localhost:5174",
         "http://127.0.0.1:3000",
         "http://127.0.0.1:3001",
+        "http://127.0.0.1:3002",
         "http://127.0.0.1:5173",
+        "http://127.0.0.1:5174",
     ],
     allow_credentials=True,
     allow_methods=["*"],

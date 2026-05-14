@@ -3,7 +3,7 @@ import { getAccessToken } from '@/shared/utils/session'
 
 export const rtkApi = createApi({
   reducerPath: 'api',
-  tagTypes: ['Favorites'],
+  tagTypes: ['Favorites', 'AdminCategories', 'AdminEntities', 'AdminUsers', 'Recommendations'],
   baseQuery: fetchBaseQuery({
     baseUrl: `${import.meta.env.VITE_API_URL ?? 'http://localhost:8000'}`,
     prepareHeaders: (headers) => {

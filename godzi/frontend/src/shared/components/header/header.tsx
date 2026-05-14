@@ -24,6 +24,13 @@ const actionIcons = {
       <path d="M18 12H9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
     </svg>
   ),
+  burger: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M5 7.5H19" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M5 12H19" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M5 16.5H19" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  ),
 }
 
 export const Header: FC = () => {
@@ -31,6 +38,7 @@ export const Header: FC = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const [loggedIn, setLoggedIn] = useState(() => isAuthenticated())
+  const [menuOpen, setMenuOpen] = useState(false)
 
   useEffect(() => {
     const syncAuth = () => setLoggedIn(isAuthenticated())
@@ -45,9 +53,14 @@ export const Header: FC = () => {
     }
   }, [location.pathname])
 
+  useEffect(() => {
+    setMenuOpen(false)
+  }, [location.pathname])
+
   const handleLogout = () => {
     signOut()
     dispatch(rtkApi.util.resetApiState())
+    setMenuOpen(false)
     navigate('/login')
   }
 
@@ -59,19 +72,30 @@ export const Header: FC = () => {
           <span className={styles.header__brandText}>dzi</span>
         </Link>
 
-        <nav aria-label="Основная навигация" className={styles.header__nav}>
+        <nav
+          aria-label="Основная навигация"
+          className={`${styles.header__nav} ${menuOpen ? styles.header__nav_open : ''}`}
+        >
           <ul className={styles.header__navList}>
             <li>
-              <Link to="/?section=categories&type=places#categories">Места</Link>
+              <Link to="/?section=categories&type=places#categories" onClick={() => setMenuOpen(false)}>
+                Места
+              </Link>
             </li>
             <li>
-              <Link to="/?section=categories&type=events#categories">Мероприятия</Link>
+              <Link to="/?section=categories&type=events#categories" onClick={() => setMenuOpen(false)}>
+                Мероприятия
+              </Link>
             </li>
             <li>
-              <Link to="/#collections">Подборки</Link>
+              <Link to="/#collections" onClick={() => setMenuOpen(false)}>
+                Подборки
+              </Link>
             </li>
             <li>
-              <Link to="/#about">О нас</Link>
+              <Link to="/#about" onClick={() => setMenuOpen(false)}>
+                О нас
+              </Link>
             </li>
           </ul>
         </nav>
@@ -82,14 +106,33 @@ export const Header: FC = () => {
               {actionIcons.favorite}
             </Link>
           ) : null}
-          <Link to={loggedIn ? '/profile' : '/login'} className={styles.header__iconButton} aria-label="Личный кабинет">
-            {actionIcons.profile}
-          </Link>
+          {loggedIn ? (
+            <Link to="/profile" className={styles.header__iconButton} aria-label="Личный кабинет">
+              {actionIcons.profile}
+            </Link>
+          ) : (
+            <Link to="/login" className={styles.header__iconButton} aria-label="Личный кабинет">
+              {actionIcons.profile}
+            </Link>
+          )}
           {loggedIn ? (
             <button type="button" className={styles.header__iconButton} aria-label="Выйти" onClick={handleLogout}>
               {actionIcons.logout}
             </button>
-          ) : null}
+          ) : (
+            <Link to="/login" className={styles.header__iconButton} aria-label="Войти">
+              {actionIcons.logout}
+            </Link>
+          )}
+          <button
+            type="button"
+            className={`${styles.header__iconButton} ${styles.header__menuButton}`}
+            aria-label="Открыть меню"
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen((currentState) => !currentState)}
+          >
+            {actionIcons.burger}
+          </button>
         </div>
       </div>
     </header>
