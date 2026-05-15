@@ -2,7 +2,6 @@ import { useGetFavoritesQuery, useRemoveFavoriteMutation } from '@/entities/favo
 import { Layout, FavoriteIconButton } from '@/shared/components'
 import { isAuthenticated } from '@/shared/utils/session'
 import { resolveEntityPhoto } from '@/shared/utils'
-import { Helmet } from 'react-helmet-async'
 import { useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import styles from './favorites-page.module.scss'
@@ -28,10 +27,6 @@ export const FavoritesPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Избранное — GOdzi</title>
-      </Helmet>
-
       <Layout>
         <section className={`container ${styles.favorites}`}>
           <div className={styles.head}>

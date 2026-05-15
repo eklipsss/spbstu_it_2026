@@ -2,7 +2,6 @@ import { useLoginMutation } from '@/entities/auth/api'
 import { Layout } from '@/shared/components'
 import { rtkApi } from '@/shared/api'
 import { buildStoredProfileFromUser, getStoredProfile, signIn } from '@/shared/utils/session'
-import { Helmet } from 'react-helmet-async'
 import { FormEvent, useMemo, useState } from 'react'
 import { useDispatch } from 'react-redux'
 import { Link, useNavigate } from 'react-router-dom'
@@ -55,10 +54,6 @@ export const LoginPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Вход — GOdzi</title>
-      </Helmet>
-
       <Layout>
         <section className={`container ${styles.login}`}>
           <div className={styles.login__panel}>

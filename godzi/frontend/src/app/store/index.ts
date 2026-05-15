@@ -1,9 +1,7 @@
 import { combineReducers, configureStore, Reducer } from '@reduxjs/toolkit';
 import { rtkApi } from '@/shared/api';
-import { entitiesReducer } from '@/entities/entity/slice';
 
 export const combinedReducer = combineReducers({
-  entities: entitiesReducer,
   [rtkApi.reducerPath]: rtkApi.reducer,
 })
 

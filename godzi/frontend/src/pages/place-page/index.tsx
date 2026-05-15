@@ -6,7 +6,6 @@ import { AuthRequiredModal, Layout } from '@/shared/components'
 import { authEventName, isAuthenticated } from '@/shared/utils/session'
 import { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { Helmet } from 'react-helmet-async'
 
 export const PlacePage = () => {
   const { id } = useParams()
@@ -58,12 +57,6 @@ export const PlacePage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>{data?.name ?? 'Карточка места'}</title>
-        <meta name="description" content={data?.description ?? 'Подробная карточка выбранной локации'} />
-        <meta property="og:title" content={data?.name ?? 'Карточка места'} />
-        <meta property="og:description" content={data?.description ?? 'Подробная карточка выбранной локации'} />
-      </Helmet>
       <Layout>
         <PlacePageInfo
           data={data}

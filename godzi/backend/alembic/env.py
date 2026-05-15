@@ -6,11 +6,11 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 from sqlmodel import SQLModel
 
-from app.db import sqlite_url
+from app.db import build_database_url
 from app.models import *  # noqa: F401,F403
 
 config = context.config
-config.set_main_option("sqlalchemy.url", sqlite_url)
+config.set_main_option("sqlalchemy.url", build_database_url())
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)

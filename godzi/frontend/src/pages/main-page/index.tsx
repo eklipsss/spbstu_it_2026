@@ -2,15 +2,12 @@ import { useGetChildCategoriesByIdQuery, useGetChildGategoriesQuery } from '@/en
 import { useGetEntitiesQuery } from '@/entities/entity/api'
 import { useAddFavoriteMutation, useGetFavoriteIdsQuery, useRemoveFavoriteMutation } from '@/entities/favorites/api'
 import { useGetRecommendationsQuery } from '@/entities/recommendations/api'
-import { entitiesActions, entitiesSelectors } from '@/entities/entity/slice'
 import type { Category, Entity } from '@/shared/types'
 import heroCharacter from '@assets/images/hero-character.png'
 import eventsImage from '@assets/images/main_events.png'
 import placesImage from '@assets/images/main_places.png'
 import { skipToken } from '@reduxjs/toolkit/query'
-import { Helmet } from 'react-helmet-async'
 import { useEffect, useMemo, useState } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
 import { Link, useLocation } from 'react-router-dom'
 import { AuthRequiredModal, FavoriteIconButton, Layout } from '@/shared/components'
 import { authEventName, isAuthenticated } from '@/shared/utils/session'
@@ -45,8 +42,6 @@ const ROOT_CATEGORY_IDS: Record<string, number> = {
 
 export const MainPage = () => {
   const location = useLocation()
-  const dispatch = useDispatch()
-  const searchedEntities = useSelector(entitiesSelectors.searchedEntities)
   const [loggedIn, setLoggedIn] = useState(() => isAuthenticated())
   const [selectedMainCategory, setSelectedMainCategory] = useState<string>('Места')
   const [selectedCategoryPath, setSelectedCategoryPath] = useState<Category[]>([])
@@ -93,13 +88,11 @@ export const MainPage = () => {
     if (type === 'places') {
       setSelectedMainCategory('Места')
       setSelectedCategoryPath([])
-      dispatch(entitiesActions.resetEntities())
     }
 
     if (type === 'events') {
       setSelectedMainCategory('Мероприятия')
       setSelectedCategoryPath([])
-      dispatch(entitiesActions.resetEntities())
     }
 
     if (!location.hash) return
@@ -110,7 +103,7 @@ export const MainPage = () => {
     }
 
     window.requestAnimationFrame(scrollToTarget)
-  }, [dispatch, location.hash, location.search])
+  }, [location.hash, location.search])
 
   const childCategories = useMemo(() => {
     if (selectedCategoryPath.length) {
@@ -148,10 +141,6 @@ export const MainPage = () => {
   }, [recommendations])
 
   const visibleEntities = useMemo(() => {
-    if (searchedEntities.entities.length) {
-      return searchedEntities.entities
-    }
-
     if (entities?.entities?.length && selectedChildCategoryId) {
       return entities.entities
     }
@@ -161,9 +150,9 @@ export const MainPage = () => {
     }
 
     return []
-  }, [entities?.entities, searchedEntities.entities, selectedChildCategoryId])
+  }, [entities?.entities, selectedChildCategoryId])
 
-  const shouldShowResults = Boolean(searchedEntities.entities.length || selectedChildCategoryId)
+  const shouldShowResults = Boolean(selectedChildCategoryId)
 
   const favoriteIdsSet = useMemo(() => new Set(favoriteIds), [favoriteIds])
   const pendingFavoriteIdsSet = useMemo(() => new Set(pendingFavoriteIds), [pendingFavoriteIds])
@@ -178,26 +167,22 @@ export const MainPage = () => {
     setSelectedMainCategory(category)
     setSelectedCategoryPath([])
     setVisibleResultsCount(6)
-    dispatch(entitiesActions.resetEntities())
   }
 
   const handleLoadEntities = (category: Category) => {
     setSelectedCategoryPath((currentPath) => [...currentPath, category])
     setVisibleResultsCount(6)
-    dispatch(entitiesActions.resetEntities())
   }
 
   const handleSelectPathLevel = (index: number) => {
     if (index === 0) {
       setSelectedCategoryPath([])
       setVisibleResultsCount(6)
-      dispatch(entitiesActions.resetEntities())
       return
     }
 
     setSelectedCategoryPath((currentPath) => currentPath.slice(0, index))
     setVisibleResultsCount(6)
-    dispatch(entitiesActions.resetEntities())
   }
 
   const handleFavoriteToggle = async (entityId: number) => {
@@ -263,14 +248,6 @@ export const MainPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>GOdzi – Лучший сервис для поиска мест, идей досуга и развлечений</title>
-        <meta
-          name="description"
-          content="GOdzi — ваш личный помощник по поиску интересных мест, мероприятий и идей досуга в любом городе. Находите, что посмотреть и куда сходить."
-        />
-      </Helmet>
-
       <Layout>
         <section className={styles.hero}>
           <div className="container">
@@ -376,19 +353,6 @@ export const MainPage = () => {
         <section className={styles.selections}>
           <div className="container">
             <div className={styles.resultsHead}>
-              {/* <div>
-                <h3>Актуальные карточки</h3>
-                <p>
-                  {searchedEntities.entities.length
-                    ? 'Результаты по поисковому запросу'
-                    : selectedChildCategory
-                      ? 'Карточки по выбранной категории'
-                      : 'Стартовая демо-подборка, чтобы секция сразу выглядела наполненной'}
-                </p>
-              </div> */}
-              {/* <Link to="/about" className={styles.textLink}>
-                Подробнее о сервисе
-              </Link> */}
             </div>
 
             {shouldShowResults ? (

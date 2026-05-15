@@ -3,7 +3,6 @@ import { useGetCategoriesQuery } from '@/entities/categories/api'
 import { useGetTagsQuery } from '@/entities/tags/api'
 import { buildStoredProfileFromUser, getStoredProfile, isAuthenticated, saveStoredProfile } from '@/shared/utils/session'
 import { Layout } from '@/shared/components'
-import { Helmet } from 'react-helmet-async'
 import { FormEvent, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import styles from './edit-profile-page.module.scss'
@@ -82,10 +81,6 @@ export const EditProfilePage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Редактирование профиля — GOdzi</title>
-      </Helmet>
-
       <Layout>
         <section className={`container ${styles.editProfile}`}>
           <div className={styles.editProfile__head}>

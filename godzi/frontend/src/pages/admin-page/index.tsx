@@ -12,7 +12,6 @@ import {
 } from '@/entities/admin/api'
 import type { AdminEntityPayload, AdminUserPayload } from '@/entities/admin/api'
 import type { Category, Entity } from '@/shared/types'
-import { Helmet } from 'react-helmet-async'
 import { useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import styles from './admin-page.module.scss'
@@ -265,10 +264,6 @@ export const AdminPage = ({ onLogout }: AdminPageProps) => {
   }
   return (
     <>
-      <Helmet>
-        <title>Админ-панель GOdzi</title>
-      </Helmet>
-
       <main className={styles.admin}>
         <div className="container">
             <div className={styles.header}>

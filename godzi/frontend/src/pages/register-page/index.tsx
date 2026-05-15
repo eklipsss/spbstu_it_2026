@@ -4,7 +4,6 @@ import { useGetTagsQuery } from '@/entities/tags/api'
 import { Layout } from '@/shared/components'
 import { rtkApi } from '@/shared/api'
 import { buildStoredProfileFromUser, saveStoredProfile, signIn } from '@/shared/utils/session'
-import { Helmet } from 'react-helmet-async'
 import { FormEvent, useMemo, useState } from 'react'
 import { useDispatch } from 'react-redux'
 import { Link, useNavigate } from 'react-router-dom'
@@ -232,10 +231,6 @@ export const RegisterPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Регистрация — GOdzi</title>
-      </Helmet>
-
       <Layout>
         <section className={`container ${styles.register}`}>
           <div className={styles.register__panel}>

@@ -44,18 +44,7 @@ export const entityApi = rtkApi.injectEndpoints({
         return { data: { entities, total: entities.length } }
       },
     }),
-    searchEntities: build.query<{ entities: Entity[]; total: number }, string>({
-      query: (name) => ({
-        url: '/entities/get_entities',
-        params: {
-          name,
-          skip: 0,
-          limit: 30,
-        },
-      }),
-      transformResponse: (entities: Entity[]) => ({ entities, total: entities.length }),
-    }),
   }),
 })
 
-export const { useGetEntityDataQuery, useGetEntitiesQuery, useLazySearchEntitiesQuery } = entityApi
+export const { useGetEntityDataQuery, useGetEntitiesQuery } = entityApi
