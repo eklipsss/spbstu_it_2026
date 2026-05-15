@@ -23,16 +23,22 @@ class CRUDEntity(CRUDBase[Entity]):
         tag_ids: list[int] | None = None,
         categories_ids: list[int] | None = None,
     ) -> list[Entity]:
-        query = select(Entity).distinct()
+        query = select(Entity)
         all_filters = list(filters or [])
 
         if tag_ids:
-            query = query.join(EntityTag)
-            all_filters.append(EntityTag.tag_id.in_(tag_ids))
+            all_filters.append(
+                Entity.entity_id.in_(
+                    select(EntityTag.entity_id).where(EntityTag.tag_id.in_(tag_ids))
+                )
+            )
 
         if categories_ids:
-            query = query.join(EntityCategory)
-            all_filters.append(EntityCategory.category_id.in_(categories_ids))
+            all_filters.append(
+                Entity.entity_id.in_(
+                    select(EntityCategory.entity_id).where(EntityCategory.category_id.in_(categories_ids))
+                )
+            )
 
         if name:
             escaped_value = name.replace("_", "/_").replace("%", "/%")

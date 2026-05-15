@@ -11,12 +11,14 @@ import { Link, useNavigate } from 'react-router-dom'
 import styles from './register-page.module.scss'
 
 type RegistrationResult = 'success' | 'error' | null
-type FieldName = 'fullName' | 'email' | 'phone' | 'password' | 'repeatPassword'
+type FieldName = 'fullName' | 'email' | 'phone' | 'city' | 'password' | 'repeatPassword'
+const duplicateEmailMessage = 'Пользователь с таким email уже существует'
 
 const initialForm = {
   fullName: '',
   email: '',
   phone: '',
+  city: '',
   password: '',
   repeatPassword: '',
   agreed: false,
@@ -76,12 +78,14 @@ export const RegisterPage = () => {
   const navigate = useNavigate()
   const [step, setStep] = useState<1 | 2>(1)
   const [result, setResult] = useState<RegistrationResult>(null)
+  const [resultMessage, setResultMessage] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [form, setForm] = useState(initialForm)
   const [touchedFields, setTouchedFields] = useState<Record<FieldName, boolean>>({
     fullName: false,
     email: false,
     phone: false,
+    city: false,
     password: false,
     repeatPassword: false,
   })
@@ -92,13 +96,15 @@ export const RegisterPage = () => {
   const { data: tagOptions = [] } = useGetTagsQuery({ skip: 0, limit: 200 })
 
   const availableCategories = useMemo(
-    () => categoryOptions.filter((item) => item.parent_id !== null),
+    () => categoryOptions.filter((item) => item.parent_id !== null).slice(0, 10),
     [categoryOptions],
   )
+  const availableTags = useMemo(() => tagOptions.slice(0, 10), [tagOptions])
   const formErrors = useMemo(() => {
     const fullName = form.fullName.trim()
     const email = form.email.trim().toLowerCase()
     const phone = normalizePhoneNumber(form.phone)
+    const city = form.city.trim()
     const password = form.password
     const repeatPassword = form.repeatPassword
 
@@ -109,6 +115,8 @@ export const RegisterPage = () => {
         emailPattern.test(email) ? '' : 'Неверный формат почты',
       phone:
         phonePattern.test(phone) ? '' : 'Неверный формат телефона',
+      city:
+        city ? '' : 'Поле не может быть пустым',
       password:
         password.length >= 4 ? '' : 'Пароль должен содержать не менее 4х символов',
       repeatPassword:
@@ -148,6 +156,7 @@ export const RegisterPage = () => {
 
     setIsSubmitting(true)
     if (!isFirstStepValid || selectedCategories.length === 0 || selectedTags.length === 0) {
+      setResultMessage('')
       setResult('error')
       setIsSubmitting(false)
       return
@@ -159,14 +168,14 @@ export const RegisterPage = () => {
         password: form.password,
         full_name: form.fullName.trim(),
         phone_number: normalizePhoneNumber(form.phone),
-        city: 'Санкт-Петербург',
+        city: form.city.trim(),
         about: '',
         categories: selectedCategories,
         tags: selectedTags,
       }).unwrap()
 
       const profile = buildStoredProfileFromUser(response.user, {
-        city: response.user.city ?? 'Санкт-Петербург',
+        city: response.user.city ?? form.city.trim(),
         about: response.user.about ?? '',
         categories: response.user.categories,
         tags: response.user.tags,
@@ -175,8 +184,25 @@ export const RegisterPage = () => {
       saveStoredProfile(profile)
       signIn(response.access_token, profile)
       dispatch(rtkApi.util.resetApiState())
+      setResultMessage('')
       setResult('success')
-    } catch {
+    } catch (error) {
+      const detail =
+        typeof error === 'object' &&
+        error !== null &&
+        'data' in error &&
+        typeof error.data === 'object' &&
+        error.data !== null &&
+        'detail' in error.data &&
+        typeof error.data.detail === 'string'
+          ? error.data.detail
+          : ''
+
+      setResultMessage(
+        detail === 'Пользователь с такой почтой уже существует'
+          ? duplicateEmailMessage
+          : '',
+      )
       setResult('error')
     } finally {
       setIsSubmitting(false)
@@ -194,11 +220,13 @@ export const RegisterPage = () => {
       fullName: false,
       email: false,
       phone: false,
+      city: false,
       password: false,
       repeatPassword: false,
     })
     setSelectedCategories([])
     setSelectedTags([])
+    setResultMessage('')
     setResult(null)
   }
 
@@ -250,6 +278,18 @@ export const RegisterPage = () => {
                       onChange={(event) => handleFieldChange('phone', event.target.value)}
                     />
                     {touchedFields.phone && formErrors.phone ? <small className={styles.fieldHint}>{formErrors.phone}</small> : null}
+                  </label>
+
+                  <label className={styles.field}>
+                    <span>Город</span>
+                    <input
+                      type="text"
+                      placeholder="Санкт-Петербург"
+                      value={form.city}
+                      aria-invalid={Boolean(touchedFields.city && formErrors.city)}
+                      onChange={(event) => handleFieldChange('city', event.target.value)}
+                    />
+                    {touchedFields.city && formErrors.city ? <small className={styles.fieldHint}>{formErrors.city}</small> : null}
                   </label>
 
                   <label className={styles.field}>
@@ -319,7 +359,7 @@ export const RegisterPage = () => {
                 <div className={styles.preferenceGroup}>
                   <span>Выберите теги</span>
                   <div className={styles.tagsGrid}>
-                    {tagOptions.map((item) => (
+                    {availableTags.map((item) => (
                       <button
                         key={item.tag_id}
                         type="button"
@@ -342,6 +382,9 @@ export const RegisterPage = () => {
               <div className={styles.modalOverlay} role="dialog" aria-modal="true">
                 <div className={styles.modal}>
                   <h2>{result === 'success' ? 'Регистрация прошла успешно' : 'Ошибка регистрации'}</h2>
+                  {result === 'error' && resultMessage ? (
+                    <p className={styles.modal__message}>{resultMessage}</p>
+                  ) : null}
                   <div className={`${styles.modal__icon} ${result === 'error' ? styles.modal__icon_error : ''}`} />
                   <button type="button" className={styles.primaryButton} onClick={handleCloseModal}>
                     Закрыть

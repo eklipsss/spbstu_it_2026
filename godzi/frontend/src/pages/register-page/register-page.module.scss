@@ -187,12 +187,18 @@
 }
 
 .tagsGrid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 1rem;
 }
 
 .tagButton {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  max-width: 100%;
   min-height: 2.35rem;
   padding: 0.55rem 0.9rem;
   border: 1px solid rgba(124, 92, 255, 0.12);
@@ -200,6 +206,8 @@
   background: rgba(255, 255, 255, 0.9);
   color: $text-color;
   font-weight: 700;
+  text-align: center;
+  white-space: normal;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
   transition:
     transform $transition-duration ease,
@@ -251,6 +259,15 @@
     letter-spacing: -0.04em;
   }
 
+  &__message {
+    margin: 1rem auto 0;
+    max-width: 26rem;
+    color: rgba(196, 71, 71, 0.92);
+    font-size: 1rem;
+    line-height: 1.45;
+    font-weight: 700;
+  }
+
   &__icon {
     width: 9.4rem;
     height: 9.4rem;
@@ -265,9 +282,6 @@
 }
 
 @media (max-width: 900px) {
-  .tagsGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
 @media (max-width: 640px) {
@@ -292,10 +306,6 @@
   .primaryButton {
     width: 100%;
     min-width: 0;
-  }
-
-  .tagsGrid {
-    grid-template-columns: 1fr;
   }
 
   .modalOverlay,

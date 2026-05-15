@@ -14,7 +14,6 @@ export interface AdminEntityPayload {
   average_cost?: string
   age_gap?: string
   date?: string
-  is_featured?: boolean
   category_ids: number[]
   tag_ids: number[]
 }
@@ -86,13 +85,6 @@ export const adminApi = rtkApi.injectEndpoints({
       }),
       invalidatesTags: ['AdminEntities', 'Recommendations'],
     }),
-    getAdminCollection: build.query<Entity[], void>({
-      query: () => ({
-        url: '/admin/collection',
-        params: { skip: 0, limit: 100 },
-      }),
-      providesTags: ['AdminEntities'],
-    }),
     getAdminUsers: build.query<AuthUser[], void>({
       query: () => ({
         url: '/admin/users',
@@ -126,7 +118,6 @@ export const {
   useDeleteAdminEntityMutation,
   useDeleteAdminUserMutation,
   useGetAdminCategoriesQuery,
-  useGetAdminCollectionQuery,
   useGetAdminEntitiesQuery,
   useGetAdminUsersQuery,
   useUpdateAdminEntityMutation,

@@ -121,19 +121,6 @@ def delete_entity(entity_id: int, _: AdminUser, session: SessionDep) -> dict[str
     return {"message": "Entity deleted successfully"}
 
 
-@router.get("/collection", response_model=list[EntityPublic])
-def get_collection(_: AdminUser, session: SessionDep, pagination: PaginationDep) -> list[EntityPublic]:
-    entities = cruds.entity.get_list(
-        session=session,
-        filters=[cruds.entity.model.is_featured.is_(True)],
-        skip=pagination.skip,
-        limit=pagination.limit,
-        order="desc",
-        order_by="entity_id",
-    )
-    return [EntityPublic.from_model(entity) for entity in entities]
-
-
 @router.get("/users", response_model=list[UserPublic])
 def get_users(_: AdminUser, session: SessionDep, pagination: PaginationDep) -> list[UserPublic]:
     users = cruds.user.get_list(

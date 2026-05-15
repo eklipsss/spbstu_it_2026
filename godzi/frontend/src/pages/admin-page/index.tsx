@@ -6,7 +6,6 @@ import {
   useDeleteAdminEntityMutation,
   useDeleteAdminUserMutation,
   useGetAdminCategoriesQuery,
-  useGetAdminCollectionQuery,
   useGetAdminEntitiesQuery,
   useGetAdminUsersQuery,
   useUpdateAdminEntityMutation,
@@ -18,7 +17,7 @@ import { useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import styles from './admin-page.module.scss'
 
-type AdminTab = 'categories' | 'entities' | 'collection' | 'users'
+type AdminTab = 'categories' | 'entities' | 'users'
 
 interface EntityFormState {
   name: string
@@ -33,7 +32,6 @@ interface EntityFormState {
   average_cost: string
   age_gap: string
   date: string
-  is_featured: boolean
   category_ids: number[]
   tag_ids: string
 }
@@ -52,7 +50,6 @@ interface UserFormState {
 const tabs: { id: AdminTab; label: string }[] = [
   { id: 'categories', label: 'Категории' },
   { id: 'entities', label: 'Сущности' },
-  { id: 'collection', label: 'Подборка' },
   { id: 'users', label: 'Пользователи' },
 ]
 
@@ -69,7 +66,6 @@ const emptyEntityForm: EntityFormState = {
   average_cost: '',
   age_gap: '',
   date: '',
-  is_featured: false,
   category_ids: [],
   tag_ids: '',
 }
@@ -122,7 +118,6 @@ const entityToForm = (entity: Entity): EntityFormState => ({
   average_cost: entity.average_cost ?? '',
   age_gap: entity.age_gap ?? '',
   date: entity.date ?? '',
-  is_featured: Boolean(entity.is_featured),
   category_ids: entity.categories_ids ?? [],
   tag_ids: (entity.tags_ids ?? []).join(', '),
 })
@@ -140,7 +135,6 @@ const formToPayload = (form: EntityFormState): AdminEntityPayload => ({
   average_cost: form.average_cost.trim(),
   age_gap: form.age_gap.trim(),
   date: form.date.trim(),
-  is_featured: form.is_featured,
   category_ids: form.category_ids,
   tag_ids: parseIds(form.tag_ids),
 })
@@ -171,11 +165,6 @@ export const AdminPage = ({ onLogout }: AdminPageProps) => {
     refetch: refetchEntities,
   } = useGetAdminEntitiesQuery()
   const {
-    data: collection = [],
-    isFetching: isCollectionFetching,
-    refetch: refetchCollection,
-  } = useGetAdminCollectionQuery()
-  const {
     data: users = [],
     error: usersError,
     isFetching: isUsersFetching,
@@ -192,56 +181,55 @@ export const AdminPage = ({ onLogout }: AdminPageProps) => {
 
   const categoryMap = useMemo(() => categoryNamesById(categories), [categories])
   const accessError = getErrorText(categoriesError ?? entitiesError ?? usersError)
-  const isDatabaseLoading = isCategoriesFetching || isEntitiesFetching || isCollectionFetching || isUsersFetching
+  const isDatabaseLoading = isCategoriesFetching || isEntitiesFetching || isUsersFetching
 
   const refreshDatabaseData = () => {
     setMessage('Подгружаем данные из базы')
     void refetchCategories()
     void refetchEntities()
-    void refetchCollection()
     void refetchUsers()
   }
 
-  const handleCreateCategory = async (event: FormEvent<HTMLFormElement>) => {
+  const handleCreateCategory = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setMessage('')
 
-    try {
-      await createCategory({
+    createCategory({
         name: categoryName.trim(),
         parent_id: categoryParentId ? Number(categoryParentId) : null,
-      }).unwrap()
-      setCategoryName('')
-      setCategoryParentId('')
-      setMessage('Категория сохранена')
-    } catch (error) {
-      setMessage(getErrorText(error))
-    }
+      })
+      .unwrap()
+      .then(() => {
+        setCategoryName('')
+        setCategoryParentId('')
+        setMessage('Категория сохранена')
+      })
+      .catch((error) => {
+        setMessage(getErrorText(error))
+      })
   }
 
-  const handleSubmitEntity = async (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmitEntity = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setMessage('')
 
     const payload = formToPayload(entityForm)
+    const request = editingEntityId
+      ? updateEntity({ entityId: editingEntityId, body: payload }).unwrap()
+      : createEntity(payload).unwrap()
 
-    try {
-      if (editingEntityId) {
-        await updateEntity({ entityId: editingEntityId, body: payload }).unwrap()
-        setMessage('Сущность обновлена')
-      } else {
-        await createEntity(payload).unwrap()
-        setMessage('Сущность создана')
-      }
-
-      setEntityForm(emptyEntityForm)
-      setEditingEntityId(null)
-    } catch (error) {
-      setMessage(getErrorText(error))
-    }
+    request
+      .then(() => {
+        setMessage(editingEntityId ? 'Сущность обновлена' : 'Сущность создана')
+        setEntityForm(emptyEntityForm)
+        setEditingEntityId(null)
+      })
+      .catch((error) => {
+        setMessage(getErrorText(error))
+      })
   }
 
-  const handleCreateUser = async (event: FormEvent<HTMLFormElement>) => {
+  const handleCreateUser = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setMessage('')
 
@@ -258,13 +246,15 @@ export const AdminPage = ({ onLogout }: AdminPageProps) => {
       tags: [],
     }
 
-    try {
-      await createUser(payload).unwrap()
-      setUserForm(emptyUserForm)
-      setMessage('Пользователь создан')
-    } catch (error) {
-      setMessage(getErrorText(error))
-    }
+    createUser(payload)
+      .unwrap()
+      .then(() => {
+        setUserForm(emptyUserForm)
+        setMessage('Пользователь создан')
+      })
+      .catch((error) => {
+        setMessage(getErrorText(error))
+      })
   }
 
   const startEntityEdit = (entity: Entity) => {
@@ -273,18 +263,6 @@ export const AdminPage = ({ onLogout }: AdminPageProps) => {
     setActiveTab('entities')
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
-
-  const toggleEntityInCollection = async (entity: Entity) => {
-    try {
-      await updateEntity({
-        entityId: entity.entity_id,
-        body: { is_featured: !entity.is_featured },
-      }).unwrap()
-    } catch (error) {
-      setMessage(getErrorText(error))
-    }
-  }
-
   return (
     <>
       <Helmet>
@@ -490,14 +468,6 @@ export const AdminPage = ({ onLogout }: AdminPageProps) => {
                         required
                       />
                     </label>
-                    <label className={styles.checkbox}>
-                      <input
-                        type="checkbox"
-                        checked={entityForm.is_featured}
-                        onChange={(event) => setEntityForm({ ...entityForm, is_featured: event.target.checked })}
-                      />
-                      В подборке на главной
-                    </label>
                   </div>
                   <div className={styles.actions}>
                     <button type="submit" disabled={isCreatingEntity || isUpdatingEntity}>
@@ -529,9 +499,6 @@ export const AdminPage = ({ onLogout }: AdminPageProps) => {
                           </span>
                         </div>
                         <div className={styles.rowActions}>
-                          <button type="button" onClick={() => void toggleEntityInCollection(entity)}>
-                            {entity.is_featured ? 'Убрать' : 'В подборку'}
-                          </button>
                           <button type="button" onClick={() => startEntityEdit(entity)}>
                             Изменить
                           </button>
@@ -542,34 +509,6 @@ export const AdminPage = ({ onLogout }: AdminPageProps) => {
                       </article>
                     ))}
                   </div>
-                </div>
-              </section>
-            ) : null}
-
-            {activeTab === 'collection' ? (
-              <section className={styles.panel}>
-                <h2>Сущности в подборке</h2>
-                <div className={styles.list}>
-                  {collection.length ? (
-                    collection.map((entity) => (
-                      <article key={entity.entity_id} className={styles.row}>
-                        <div>
-                          <strong>{entity.name}</strong>
-                          <span>ID {entity.entity_id}</span>
-                        </div>
-                        <div className={styles.rowActions}>
-                          <button type="button" onClick={() => startEntityEdit(entity)}>
-                            Изменить
-                          </button>
-                          <button type="button" onClick={() => void toggleEntityInCollection(entity)}>
-                            Убрать из подборки
-                          </button>
-                        </div>
-                      </article>
-                    ))
-                  ) : (
-                    <div className={styles.empty}>В подборке пока нет сущностей</div>
-                  )}
                 </div>
               </section>
             ) : null}

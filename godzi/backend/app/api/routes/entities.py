@@ -83,18 +83,13 @@ def get_entities(
 
 @router.get("/get_recommendations", response_model=list[EntityPublic])
 def get_recommendations(session: SessionDep, pagination: PaginationDep) -> list[EntityPublic]:
-    featured_entities = cruds.entity.get_list(
-        session=session,
-        filters=[cruds.entity.model.is_featured.is_(True)],
-        skip=pagination.skip,
-        limit=pagination.limit,
-    )
-    if featured_entities:
-        return [EntityPublic.from_model(entity) for entity in featured_entities]
+    place_categories = cruds.category.get_all_children_categories(session=session, category_id=1)
+    place_category_ids = [1, *[category.category_id for category in place_categories]]
 
     entities = cruds.entity.get_by_name_like(
         session=session,
         shuffle=True,
+        categories_ids=place_category_ids,
         skip=pagination.skip,
         limit=pagination.limit,
     )
