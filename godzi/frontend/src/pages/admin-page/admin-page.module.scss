@@ -1,0 +1,299 @@
+@use '@styles/vars' as *;
+
+.admin {
+  padding: 1.5rem 0 4rem;
+}
+
+.header {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.4rem;
+  border: 1px solid rgba(31, 26, 36, 0.08);
+  border-radius: 0.5rem;
+  background: $background-light-secondary;
+  box-shadow: $shadow-soft;
+
+  span {
+    color: $text-muted;
+    font-weight: 700;
+  }
+
+  h1 {
+    margin: 0.25rem 0 0;
+    font-size: clamp(2rem, 4vw, 3rem);
+    line-height: 1.05;
+  }
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, auto auto);
+  align-items: center;
+  gap: 0.35rem 0.75rem;
+  padding: 0.85rem 1rem;
+  border-radius: 0.5rem;
+  background: rgba(29, 25, 36, 0.94);
+  color: $white;
+
+  strong {
+    font-size: 1.35rem;
+  }
+
+  span {
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 0.9rem;
+  }
+}
+
+.headerActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  justify-content: flex-end;
+  gap: 0.75rem;
+
+  > button {
+    min-height: 3rem;
+    padding: 0 1rem;
+    border: 0;
+    border-radius: 0.45rem;
+    background: $primary-color;
+    color: $white;
+    font-weight: 900;
+  }
+
+  > button:disabled {
+    cursor: progress;
+    opacity: 0.7;
+  }
+}
+
+.notice {
+  margin-top: 1rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(124, 92, 255, 0.24);
+  border-radius: 0.5rem;
+  background: rgba(124, 92, 255, 0.08);
+  color: $text-color;
+  font-weight: 700;
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 1rem 0;
+
+  button {
+    min-height: 2.6rem;
+    padding: 0 1rem;
+    border: 1px solid rgba(31, 26, 36, 0.1);
+    border-radius: 0.5rem;
+    background: $white;
+    color: $text-color;
+    font-weight: 800;
+  }
+
+  .tabActive {
+    border-color: rgba(124, 92, 255, 0.48);
+    background: $primary-color;
+    color: $white;
+  }
+}
+
+.grid,
+.gridWide {
+  display: grid;
+  grid-template-columns: minmax(18rem, 0.75fr) minmax(0, 1.25fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.gridWide {
+  grid-template-columns: minmax(20rem, 0.95fr) minmax(0, 1.05fr);
+}
+
+.panel {
+  padding: 1rem;
+  border: 1px solid rgba(31, 26, 36, 0.08);
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: $shadow-card;
+
+  h2 {
+    margin: 0 0 1rem;
+    font-size: 1.25rem;
+  }
+
+  label {
+    display: grid;
+    gap: 0.35rem;
+    margin-bottom: 0.75rem;
+    color: $text-muted;
+    font-size: 0.9rem;
+    font-weight: 800;
+  }
+
+  input,
+  select,
+  textarea {
+    width: 100%;
+    min-height: 2.65rem;
+    padding: 0.65rem 0.75rem;
+    border: 1px solid rgba(31, 26, 36, 0.12);
+    border-radius: 0.45rem;
+    background: $white;
+    color: $text-color;
+    font: inherit;
+  }
+
+  select[multiple],
+  textarea {
+    min-height: 8rem;
+  }
+
+  button {
+    min-height: 2.55rem;
+    padding: 0 0.9rem;
+    border: 0;
+    border-radius: 0.45rem;
+    background: $background-dark;
+    color: $white;
+    font-weight: 800;
+  }
+
+  button:disabled {
+    cursor: progress;
+    opacity: 0.65;
+  }
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+
+  label {
+    margin-bottom: 0;
+  }
+}
+
+.fullWidth {
+  grid-column: 1 / -1;
+}
+
+.checkbox {
+  display: flex !important;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.6rem !important;
+  color: $text-color !important;
+
+  input {
+    width: 1.05rem;
+    min-height: 1.05rem;
+  }
+}
+
+.actions,
+.rowActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.actions {
+  margin-top: 1rem;
+}
+
+.list {
+  display: grid;
+  gap: 0.65rem;
+  max-height: 44rem;
+  overflow: auto;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem;
+  border: 1px solid rgba(31, 26, 36, 0.08);
+  border-radius: 0.5rem;
+  background: $background-light-secondary;
+
+  div:first-child {
+    min-width: 0;
+  }
+
+  strong,
+  span {
+    display: block;
+  }
+
+  strong {
+    overflow: hidden;
+    color: $text-color;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  span {
+    margin-top: 0.25rem;
+    color: $text-muted;
+    font-size: 0.9rem;
+    line-height: 1.35;
+  }
+
+  button {
+    flex: 0 0 auto;
+    min-height: 2.25rem;
+    padding: 0 0.75rem;
+    border: 1px solid rgba(31, 26, 36, 0.1);
+    border-radius: 0.45rem;
+    background: $white;
+    color: $text-color;
+    font-weight: 800;
+  }
+}
+
+.empty {
+  padding: 1rem;
+  border-radius: 0.5rem;
+  background: $background-light;
+  color: $text-muted;
+  font-weight: 700;
+}
+
+@media (max-width: 920px) {
+  .header,
+  .grid,
+  .gridWide {
+    grid-template-columns: 1fr;
+  }
+
+  .header {
+    display: grid;
+  }
+
+  .headerActions {
+    justify-content: stretch;
+
+    > button {
+      width: 100%;
+    }
+  }
+
+  .stats,
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

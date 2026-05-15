@@ -1,12 +1,21 @@
 services:
   backend:
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    command: >
+      python -m debugpy
+      --listen 0.0.0.0:5678
+      -m uvicorn app.main:app
+      --host 0.0.0.0
+      --port 8000
+      --reload
     environment:
       SEED_STATIC_CONTENT_ON_STARTUP: "true"
     volumes:
       - ../backend/app:/app/app
       - ../backend/alembic:/app/alembic
       - ../backend/alembic.ini:/app/alembic.ini
+    ports:
+      - "8000:8000"
+      - "5678:5678"
 
   frontend:
     build:
